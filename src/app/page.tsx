@@ -1,14 +1,11 @@
 "use client";
 
-import { useDeDot } from "@/context/dedotContext";
+import { useDedot } from "@/context/dedotContext";
 import { useExtension } from "@/context/walletConnectContext";
 import { ChainProperties } from "dedot/types/json-rpc";
 import { useState, useEffect } from "react";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
-import {
-  PalletNftsAttributeNamespace,
-  PalletNftsMintType,
-} from "dedot/chaintypes";
+
 import { AccountId32 } from "dedot/codecs";
 
 type CreateCollectionData = {
@@ -33,7 +30,7 @@ type SetAttributesData = {
 
 export default function Home() {
   const { client, connected, connecting, error, connect, endpoint } =
-    useDeDot();
+    useDedot();
   const { selectedAccount, connectExtension, accounts, selectAccount } =
     useExtension();
   const [createCollectionData, setCreateCollectionData] =
@@ -178,7 +175,7 @@ export default function Home() {
   };
 
   const getSigner = async () => {
-    await web3Enable("unique-nft");
+    await web3Enable("polkadot-js");
 
     const injector = await web3FromAddress(selectedAccount.address);
 
@@ -314,7 +311,11 @@ export default function Home() {
       <div className="max-w-4xl mx-auto">
         <header className="mb-8">
           <div>
-            {<button onClick={connectExtension}>Connect account</button>}
+            {
+              <button onClick={connectExtension}>
+                Connect account
+              </button>
+            }
           </div>
           <div>
             {accounts.map((acc) => {
