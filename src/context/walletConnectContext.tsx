@@ -1,7 +1,6 @@
 "use client";
 
 import { InjectedAccount } from "dedot/types";
-// src/context/ExtensionContext.tsx
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import type {
   InjectedAccountWithMeta,

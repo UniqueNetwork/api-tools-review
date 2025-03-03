@@ -1,4 +1,3 @@
-// src/app/layout.tsx
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { DedotWsProvider } from "../context/dedotContext";
@@ -21,7 +20,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <ExtensionProvider>
-          <DedotWsProvider defaultEndpoint={process.env.WS_ENDPOINT}>{children}</DedotWsProvider>
+          <DedotWsProvider defaultEndpoint={process.env.WS_ENDPOINT}>
+            {children}
+          </DedotWsProvider>
         </ExtensionProvider>
       </body>
     </html>
