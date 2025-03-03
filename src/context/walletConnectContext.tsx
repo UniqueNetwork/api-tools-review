@@ -1,17 +1,16 @@
 "use client";
 
-// src/context/ExtensionContext.tsx
+import { InjectedAccount } from "dedot/types";
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import type { InjectedExtension } from "@polkadot/extension-inject/types";
-import {
-  Polkadot,
-  IPolkadotExtensionAccount,
-} from "@unique-nft/utils/extension";
+import type {
+  InjectedAccountWithMeta,
+  InjectedWindowProvider,
+} from "@polkadot/extension-inject/types";
 
 // Define the context state shape
 interface ExtensionContextProps {
-  accounts: IPolkadotExtensionAccount[];
-  selectedAccount: IPolkadotExtensionAccount | null;
+  accounts: InjectedAccount[];
+  selectedAccount: InjectedAccount | null;
   loading: boolean;
   error: Error | null;
   connectExtension: () => Promise<void>;
@@ -39,9 +38,9 @@ interface ExtensionProviderProps {
 export const ExtensionProvider: React.FC<ExtensionProviderProps> = ({
   children,
 }) => {
-  const [accounts, setAccounts] = useState<IPolkadotExtensionAccount[]>([]);
+  const [accounts, setAccounts] = useState<InjectedAccount[]>([]);
   const [selectedAccount, setSelectedAccount] =
-    useState<IPolkadotExtensionAccount | null>(null);
+    useState<InjectedAccount | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -51,7 +50,12 @@ export const ExtensionProvider: React.FC<ExtensionProviderProps> = ({
       setLoading(true);
       setError(null);
 
-      const { accounts } = await Polkadot.enableAndLoadAllWallets();
+      const injectedExtension: InjectedWindowProvider = (window as any)
+        .injectedWeb3?.["polkadot-js"];
+
+      const ext = await injectedExtension.enable("polkadot-js");
+
+      const accounts = await ext.accounts?.get();
 
       setAccounts(accounts);
     } catch (err) {

@@ -10,7 +10,7 @@ import React, {
 import { WsProvider, DedotClient } from "dedot";
 
 // Define the context state shape
-interface DeDotContextProps {
+interface DedotContextProps {
   client: DedotClient | null;
   connected: boolean;
   connecting: boolean;
@@ -20,7 +20,7 @@ interface DeDotContextProps {
 }
 
 // Create the context with default values
-const DeDotContext = createContext<DeDotContextProps>({
+const DedotWsContext = createContext<DedotContextProps>({
   client: null,
   connected: false,
   connecting: false,
@@ -30,18 +30,18 @@ const DeDotContext = createContext<DeDotContextProps>({
 });
 
 // Custom hook for using the context
-export const useDeDot = () => useContext(DeDotContext);
+export const useDedot = () => useContext(DedotWsContext);
 
 // Default Polkadot endpoint
 const DEFAULT_ENDPOINT = "wss://westend-asset-hub-rpc.polkadot.io";
 
 // Provider component
-interface DeDotProviderProps {
+interface DedotProviderProps {
   children: ReactNode;
   defaultEndpoint?: string;
 }
 
-export const DedotProvider: React.FC<DeDotProviderProps> = ({
+export const DedotWsProvider: React.FC<DedotProviderProps> = ({
   children,
   defaultEndpoint = DEFAULT_ENDPOINT,
 }) => {
@@ -59,7 +59,7 @@ export const DedotProvider: React.FC<DeDotProviderProps> = ({
       // Create a WebSocket provider
       const provider = new WsProvider(defaultEndpoint);
 
-      // Create the DeDot client
+      // Create the Dedot client
       const newClient = await DedotClient.create({
         provider,
       });
@@ -71,13 +71,13 @@ export const DedotProvider: React.FC<DeDotProviderProps> = ({
       setConnected(true);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Failed to connect"));
-      console.error("DeDot connection error:", err);
+      console.error("Dedot connection error:", err);
     } finally {
       setConnecting(false);
     }
   };
 
-  const value: DeDotContextProps = {
+  const value: DedotContextProps = {
     client,
     connected,
     connecting,
@@ -87,6 +87,6 @@ export const DedotProvider: React.FC<DeDotProviderProps> = ({
   };
 
   return (
-    <DeDotContext.Provider value={value}>{children}</DeDotContext.Provider>
+    <DedotWsContext.Provider value={value}>{children}</DedotWsContext.Provider>
   );
 };
