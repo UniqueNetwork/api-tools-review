@@ -1,12 +1,11 @@
 "use client";
 
-import { useDedot } from "@/context/dedotContext";
 import { useExtension } from "@/context/walletConnectContext";
 import { ChainProperties } from "dedot/types/json-rpc";
 import { useState, useEffect } from "react";
-import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 
-import { AccountId32 } from "dedot/codecs";
+import { useDedot } from "@/hooks/useDedot";
+import { DispatchError } from "dedot/codecs";
 
 type CreateCollectionData = {
   mintType: {
@@ -29,10 +28,18 @@ type SetAttributesData = {
 };
 
 export default function Home() {
-  const { client, connected, connecting, error, connect, endpoint } =
-    useDedot();
+  const {
+    client,
+    connected,
+    connecting,
+    error,
+    connect,
+    chainId,
+    extrinsicManager,
+  } = useDedot();
   const { selectedAccount, connectExtension, accounts, selectAccount } =
     useExtension();
+  const [signerEnabled, setSignerEnabled] = useState(false);
   const [createCollectionData, setCreateCollectionData] =
     useState<CreateCollectionData>({
       mintType: {
@@ -61,7 +68,7 @@ export default function Home() {
     key: "",
     value: "",
   });
-  const [extrinsicSuccessMessage, setExtrinsicSuccessMessage] = useState("");
+  const [extrinsicError, setExtrinsicError] = useState("");
   const [extrinsicSubmitting, setExtrinsicSubmitting] = useState(false);
   const [extrinsicStatus, setExtrinsicStatus] = useState(null);
   const [extrinsicTx, setExtrinsicTx] = useState(null);
@@ -73,6 +80,18 @@ export default function Home() {
       connect();
     }
   }, []);
+
+  useEffect(() => {
+    setSignerEnabled(false);
+
+    if (!selectedAccount) {
+      return;
+    }
+
+    extrinsicManager.setSigner(selectedAccount.address).then(() => {
+      setSignerEnabled(true);
+    });
+  }, [selectedAccount]);
 
   // Get chain properties when connected
   const [chainProperties, setChainProperties] = useState<ChainProperties>(null);
@@ -122,7 +141,15 @@ export default function Home() {
   const handleMint = async (e) => {
     e.preventDefault();
 
-    await mintExtrinsic();
+    await extrinsicManager.mintExtrinsic(
+      {
+        collectionId: +mintData.collectionId,
+        itemId: +mintData.itemId,
+        owner: selectedAccount.address,
+      },
+      ({ txHash, status, dispatchError }) =>
+        updateStatus(status.type, txHash, dispatchError)
+    );
 
     setMintData({
       collectionId: "",
@@ -133,7 +160,17 @@ export default function Home() {
   const handleCreateCollection = async (e) => {
     e.preventDefault();
 
-    createCollectionExtrinsic();
+    extrinsicManager.createCollectionExtrinsic(
+      {
+        mintSettings: {
+          defaultItemSettings: BigInt(createCollectionData.defaultSettings),
+          mintType: createCollectionData.mintType,
+        },
+        settings: BigInt(createCollectionData.settings),
+      },
+      ({ txHash, status, dispatchError }) =>
+        updateStatus(status.type, txHash, dispatchError)
+    );
 
     setCreateCollectionData({
       mintType: {
@@ -148,7 +185,15 @@ export default function Home() {
   const handleSetMetadata = async (e) => {
     e.preventDefault();
 
-    setMetadata();
+    extrinsicManager.setMetadata(
+      {
+        collectionId: +metadataData.collectionId,
+        itemId: +metadataData.itemId,
+        data: metadataData.data,
+      },
+      ({ txHash, status, dispatchError }) =>
+        updateStatus(status.type, txHash, dispatchError)
+    );
 
     setMetadataData({
       collectionId: "",
@@ -160,7 +205,17 @@ export default function Home() {
   const handleSetAttributes = async (e) => {
     e.preventDefault();
 
-    setAttributes();
+    extrinsicManager.setAttributes(
+      {
+        collectionId: +attributesData.collectionId,
+        itemId: +attributesData.itemId,
+        namespace: attributesData.namespace,
+        key: attributesData.key,
+        value: attributesData.value,
+      },
+      ({ txHash, status, dispatchError }) =>
+        updateStatus(status.type, txHash, dispatchError)
+    );
 
     setAttributesData({
       collectionId: "",
@@ -174,21 +229,7 @@ export default function Home() {
     });
   };
 
-  const getSigner = async () => {
-    await web3Enable("polkadot-js");
-
-    const injector = await web3FromAddress(selectedAccount.address);
-
-    const signer = injector.signer;
-
-    if (!signer) {
-      return;
-    }
-
-    return signer;
-  };
-
-  const updateStatus = (status: string, hash: string) => {
+  const updateStatus = (status: string, hash: string, error: DispatchError) => {
     setExtrinsicSubmitting(true);
     if (status) {
       setExtrinsicStatus(status);
@@ -201,99 +242,9 @@ export default function Home() {
       setExtrinsicStatus(null);
       setExtrinsicTx(null);
     }
-  };
-
-  const createCollectionExtrinsic = async () => {
-    const signer = await getSigner();
-
-    await client.tx.nfts
-      .create(selectedAccount.address, {
-        settings: BigInt(createCollectionData.settings),
-        mintSettings: {
-          mintType: {
-            type: createCollectionData.mintType.type,
-            value: createCollectionData.mintType.value,
-          },
-          defaultItemSettings: BigInt(createCollectionData.defaultSettings),
-        },
-      })
-      .signAndSend(
-        selectedAccount.address,
-        {
-          signer,
-        },
-        ({ txHash, status }) => {
-          updateStatus(status.type, txHash);
-        }
-      );
-  };
-
-  const setAttributes = async () => {
-    const signer = await getSigner();
-
-    await client.tx.nfts
-      .setAttribute(
-        +attributesData.collectionId,
-        +attributesData.itemId,
-        {
-          type: attributesData.namespace.type,
-          value: attributesData.namespace.value
-            ? new AccountId32(attributesData.namespace.value)
-            : undefined,
-        },
-        attributesData.key,
-        attributesData.value
-      )
-      .signAndSend(
-        selectedAccount.address,
-        {
-          signer,
-        },
-        ({ txHash, status }) => {
-          updateStatus(status.type, txHash);
-        }
-      );
-  };
-
-  const mintExtrinsic = async () => {
-    const signer = await getSigner();
-
-    await client.tx.nfts
-      .mint(
-        +mintData.collectionId,
-        +mintData.itemId,
-        selectedAccount.address,
-        {}
-      )
-      .signAndSend(
-        selectedAccount.address,
-        {
-          signer,
-        },
-        ({ txHash, status }) => {
-          updateStatus(status.type, txHash);
-        }
-      );
-  };
-
-  const setMetadata = async () => {
-    const signer = await getSigner();
-
-    await client.tx.nfts
-      .setMetadata(
-        +metadataData.collectionId,
-        +metadataData.itemId,
-        selectedAccount.address
-      )
-      .signAndSend(
-        selectedAccount.address,
-        {
-          signer,
-        },
-        ({ txHash, status }) => {
-          updateStatus(status.type, txHash);
-        }
-      );
+    if (error) {
+      setExtrinsicError(error.type);
+    }
   };
 
   const getBalance = () => {
@@ -311,11 +262,7 @@ export default function Home() {
       <div className="max-w-4xl mx-auto">
         <header className="mb-8">
           <div>
-            {
-              <button onClick={connectExtension}>
-                Connect account
-              </button>
-            }
+            {<button onClick={connectExtension}>Connect account</button>}
           </div>
           <div>
             {accounts.map((acc) => {
@@ -353,12 +300,12 @@ export default function Home() {
 
           <div className="mt-4">
             <div className="flex mb-4">
-              <p>{endpoint}</p>
+              <p>{chainId}</p>
             </div>
           </div>
         </div>
 
-        {connected && (
+        {connected && signerEnabled && (
           <>
             <div className="p-6 rounded-lg border border-gray-200 mb-8 bg-white shadow-sm">
               <h2 className="text-xl font-semibold mb-4">Chain Information</h2>
@@ -390,6 +337,7 @@ export default function Home() {
               </h2>
               <h2>{extrinsicStatus}</h2>
               <h2>{extrinsicTx}</h2>
+              <h2 className="text-red">{extrinsicError}</h2>
             </div>
 
             <div className="max-w-md mx-auto p-4 bg-white rounded shadow mt-8">
