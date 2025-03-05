@@ -262,7 +262,11 @@ export default function Home() {
       <div className="max-w-4xl mx-auto">
         <header className="mb-8">
           <div>
-            {<button onClick={connectExtension}>Connect account</button>}
+            {
+              <button onClick={connectExtension}>
+                Connect account
+              </button>
+            }
           </div>
           <div>
             {accounts.map((acc) => {
