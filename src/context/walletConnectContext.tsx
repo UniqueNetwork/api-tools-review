@@ -2,15 +2,17 @@
 
 import { InjectedAccount } from "dedot/types";
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import type {
-  InjectedAccountWithMeta,
-  InjectedWindowProvider,
-} from "@polkadot/extension-inject/types";
+import {
+  getInjectedExtensions,
+  connectInjectedExtension,
+  InjectedPolkadotAccount,
+  InjectedExtension,
+} from "polkadot-api/pjs-signer";
 
 // Define the context state shape
 interface ExtensionContextProps {
-  accounts: InjectedAccount[];
-  selectedAccount: InjectedAccount | null;
+  accounts: InjectedPolkadotAccount[];
+  selectedAccount: InjectedPolkadotAccount | null;
   loading: boolean;
   error: Error | null;
   connectExtension: () => Promise<void>;
@@ -38,9 +40,9 @@ interface ExtensionProviderProps {
 export const ExtensionProvider: React.FC<ExtensionProviderProps> = ({
   children,
 }) => {
-  const [accounts, setAccounts] = useState<InjectedAccount[]>([]);
+  const [accounts, setAccounts] = useState<InjectedPolkadotAccount[]>([]);
   const [selectedAccount, setSelectedAccount] =
-    useState<InjectedAccount | null>(null);
+    useState<InjectedPolkadotAccount | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -50,12 +52,13 @@ export const ExtensionProvider: React.FC<ExtensionProviderProps> = ({
       setLoading(true);
       setError(null);
 
-      const injectedExtension: InjectedWindowProvider = (window as any)
-        .injectedWeb3?.["polkadot-js"];
+      const extensions: string[] = getInjectedExtensions();
 
-      const ext = await injectedExtension.enable("polkadot-js");
+      const selectedExtension: InjectedExtension =
+        await connectInjectedExtension(extensions[0]);
 
-      const accounts = await ext.accounts?.get();
+      const accounts: InjectedPolkadotAccount[] =
+        selectedExtension.getAccounts();
 
       setAccounts(accounts);
     } catch (err) {
@@ -71,6 +74,7 @@ export const ExtensionProvider: React.FC<ExtensionProviderProps> = ({
   // Select an account by address
   const selectAccount = (address: string) => {
     const account = accounts.find((acc) => acc.address === address);
+
     if (account) {
       setSelectedAccount(account);
     }

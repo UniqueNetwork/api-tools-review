@@ -1,47 +1,42 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import React, { createContext, useState, ReactNode } from "react";
 import { WsProvider, DedotClient } from "dedot";
+import { DedotExtrinsicsManager } from "@/utils/dedot/dedotExtrinsics";
 
-// Define the context state shape
-interface DedotContextProps {
+interface DedotWsContextProps {
   client: DedotClient | null;
   connected: boolean;
   connecting: boolean;
   error: Error | null;
   connect: () => Promise<void>;
-  endpoint: string;
+  chainId: string;
+  init: boolean;
+  extrinsicManager: DedotExtrinsicsManager;
 }
 
 // Create the context with default values
-const DedotWsContext = createContext<DedotContextProps>({
+export const DedotWsContext = createContext<DedotWsContextProps>({
   client: null,
   connected: false,
   connecting: false,
   error: null,
   connect: async () => {},
-  endpoint: "",
+  chainId: "",
+  init: false,
+  extrinsicManager: null,
 });
-
-// Custom hook for using the context
-export const useDedot = () => useContext(DedotWsContext);
 
 // Default Polkadot endpoint
 const DEFAULT_ENDPOINT = "wss://westend-asset-hub-rpc.polkadot.io";
 
 // Provider component
-interface DedotProviderProps {
+interface DedotWsProviderProps {
   children: ReactNode;
   defaultEndpoint?: string;
 }
 
-export const DedotWsProvider: React.FC<DedotProviderProps> = ({
+export const DedotWsProvider: React.FC<DedotWsProviderProps> = ({
   children,
   defaultEndpoint = DEFAULT_ENDPOINT,
 }) => {
@@ -49,6 +44,8 @@ export const DedotWsProvider: React.FC<DedotProviderProps> = ({
   const [connected, setConnected] = useState<boolean>(false);
   const [connecting, setConnecting] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
+  const [extrinsicManager, setExtrinsicManager] =
+    useState<DedotExtrinsicsManager | null>(null);
 
   // Connect to a Polkadot node
   const connect = async () => {
@@ -67,6 +64,8 @@ export const DedotWsProvider: React.FC<DedotProviderProps> = ({
       // Wait for client to connect
       await newClient.connect();
 
+      setExtrinsicManager(new DedotExtrinsicsManager("", newClient));
+
       setClient(newClient);
       setConnected(true);
     } catch (err) {
@@ -77,13 +76,15 @@ export const DedotWsProvider: React.FC<DedotProviderProps> = ({
     }
   };
 
-  const value: DedotContextProps = {
+  const value: DedotWsContextProps = {
     client,
     connected,
     connecting,
     error,
-    endpoint: defaultEndpoint,
+    chainId: defaultEndpoint,
     connect,
+    init: true,
+    extrinsicManager,
   };
 
   return (
