@@ -52,8 +52,53 @@ export class PapiExtrinsicManager {
     this.client = client;
   }
 
-  setSigner(signer: PolkadotSigner) {
+  setSigner(signer: PolkadotSigner, signerAddress: string) {
+    this.signerAddress = signerAddress;
     this.signer = signer;
+  }
+
+  async getTokenData(collectionId: number, itemId: number) {
+    const [metadata, attributes] = await Promise.all([
+      this.getTokenMetadata(collectionId, itemId),
+      this.getTokenAttributes(collectionId, itemId),
+    ]);
+
+    return {
+      metadata,
+      attributes,
+    };
+  }
+
+  async getCollections() {
+    return this.client.query.Nfts.CollectionAccount.getEntries(
+      this.signerAddress
+    ).then((res) => res.map(({ keyArgs }) => keyArgs[1]));
+  }
+
+  async getTokens(collectionId: number) {
+    return this.client.query.Nfts.Item.getEntries(collectionId).then((res) => {
+      return res
+        .filter(({ value }) => value.owner === this.signerAddress)
+        .map(({ keyArgs }) => keyArgs[1]);
+    });
+  }
+
+  async getTokenMetadata(collectionId: number, itemId: number) {
+    return this.client.query.Nfts.ItemMetadataOf.getEntries(collectionId).then(
+      (res) =>
+        res.find(({ keyArgs }) => keyArgs[1] === itemId)?.value?.data?.asText()
+    );
+  }
+
+  async getTokenAttributes(collectionId: number, itemId: number) {
+    return this.client.query.Nfts.Attribute.getEntries(
+      collectionId,
+      itemId
+    ).then((res) =>
+      res.map(({ value, keyArgs }) => {
+        return [keyArgs[3]?.asText(), value[0]?.asText()];
+      })
+    );
   }
 
   async createCollectionExtrinsic(data: CreateCollectionData) {
@@ -109,6 +154,6 @@ export class PapiExtrinsicManager {
       collection: data.collectionId,
       item: data.itemId,
       data: Binary.fromText(data.data),
-    });
+    }).signAndSubmit(this.signer);
   }
 }

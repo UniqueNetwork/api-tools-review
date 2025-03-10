@@ -1,10 +1,8 @@
 "use client";
 
 import { useExtension } from "@/context/walletConnectContext";
-import { ChainProperties } from "dedot/types/json-rpc";
 import { useState, useEffect } from "react";
 
-import { DispatchError } from "dedot/codecs";
 import { usePapi } from "@/hooks/usePapi";
 import { TxFinalizedPayload } from "polkadot-api";
 
@@ -74,6 +72,11 @@ export default function PapiPage() {
   const [extrinsicTx, setExtrinsicTx] = useState(null);
   const [balance, setBalance] = useState(null);
   const [chainProperties, setChainProperties] = useState(null);
+  const [collections, setCollections] = useState([]);
+  const [items, setItem] = useState([]);
+  const [chosenCollection, setChosenCollection] = useState(null);
+  const [chosenItem, setChosenItem] = useState(null);
+  const [chosenItemData, setChosenItemData] = useState(null);
 
   // Connect to default endpoint on page load
   useEffect(() => {
@@ -87,8 +90,31 @@ export default function PapiPage() {
       return;
     }
 
-    extrinsicManager.setSigner(selectedAccount.polkadotSigner);
+    extrinsicManager.setSigner(
+      selectedAccount.polkadotSigner,
+      selectedAccount.address
+    );
+
+    extrinsicManager.getCollections().then((res) => setCollections(res));
   }, [selectedAccount]);
+
+  useEffect(() => {
+    if (!chosenCollection) {
+      return;
+    }
+
+    extrinsicManager.getTokens(chosenCollection).then((res) => setItem(res));
+  }, [chosenCollection]);
+
+  useEffect(() => {
+    if (!chosenItem) {
+      return;
+    }
+
+    extrinsicManager
+      .getTokenData(chosenCollection, chosenItem)
+      .then((res) => setChosenItemData(res));
+  }, [chosenItem]);
 
   useEffect(() => {
     if (!connected) return;
@@ -158,6 +184,9 @@ export default function PapiPage() {
 
     updateStatus(res);
     setExtrinsicSubmitting(false);
+    setChosenCollection(null);
+    setChosenItem(null);
+    setChosenItemData(null);
   };
 
   const handleCreateCollection = async (e) => {
@@ -186,11 +215,13 @@ export default function PapiPage() {
   const handleSetMetadata = async (e) => {
     e.preventDefault();
 
-    await extrinsicManager.setMetadata({
+    const extrinsic = extrinsicManager.setMetadata({
       collectionId: +metadataData.collectionId,
       itemId: +metadataData.itemId,
       data: metadataData.data,
     });
+
+    await handleExtrinsic(extrinsic);
 
     setMetadataData({
       collectionId: "",
@@ -234,27 +265,77 @@ export default function PapiPage() {
     <main className="min-h-screen p-8 bg-gray-50">
       <div className="max-w-4xl mx-auto">
         <header className="mb-8">
-          <div>
-            {<button onClick={connectExtension}>Connect account</button>}
-          </div>
-          <div>
-            {accounts.map((acc) => {
-              const isSelected = acc.address === selectedAccount?.address;
-              return (
-                <button
-                  key={acc.address}
-                  onClick={() => {
-                    selectAccount(acc.address);
-                  }}
-                >
-                  {isSelected ? <b>{acc.address}</b> : <p>{acc.address}</p>}
-                </button>
-              );
-            })}
-          </div>
-          <div>{balance}</div>
+          {connected && (
+            <>
+              <div>
+                {<button onClick={connectExtension}>Connect account</button>}
+              </div>
+              <div>
+                {accounts.map((acc) => {
+                  const isSelected = acc.address === selectedAccount?.address;
+                  return (
+                    <button
+                      key={acc.address}
+                      onClick={() => {
+                        selectAccount(acc.address);
+                      }}
+                    >
+                      {isSelected ? <b>{acc.address}</b> : <p>{acc.address}</p>}
+                    </button>
+                  );
+                })}
+              </div>
+              <div>{balance}</div>
+            </>
+          )}
         </header>
+        {chosenItemData && (
+          <div className="p-6 rounded-lg border border-gray-200 mb-8 bg-white shadow-sm">
+            <h2 className="text-xl font-semibold mb-4">Chosen Item</h2>
+            <ul>
+              <li>Metadata: {chosenItemData.metadata}</li>
+              <li>
+                Attributes:
+                <ul className="ml-5">
+                  {chosenItemData.attributes?.map(([key, value]) => (
+                    <li key={key}>
+                      {key}: {value}
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            </ul>
+          </div>
+        )}
 
+        {!!collections.length && (
+          <div className="p-6 rounded-lg border border-gray-200 mb-8 bg-white shadow-sm">
+            <h2 className="text-xl font-semibold mb-4">Collections List</h2>
+            <ul>
+              {collections.map((id) => (
+                <li key={id}>
+                  <button onClick={() => setChosenCollection(id)} key={id}>
+                    {chosenCollection === id ? <b>{id}</b> : id}
+                  </button>
+                  {chosenCollection === id && (
+                    <ul className="ml-5">
+                      {items.map((item) => (
+                        <li key={item}>
+                          <button
+                            onClick={() => setChosenItem(item)}
+                            key={item}
+                          >
+                            {chosenItem === item ? <b> {chosenItem}</b> : item}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="p-6 rounded-lg border border-gray-200 mb-8 bg-white shadow-sm">
           <h2 className="text-xl font-semibold mb-4">Connection Status</h2>
           <div className="flex items-center mb-4">

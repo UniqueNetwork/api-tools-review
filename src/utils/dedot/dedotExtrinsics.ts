@@ -5,6 +5,7 @@ import { AccountId32 } from "dedot/codecs";
 import { ISubmittableResult } from "dedot/types";
 import { FrameSystemEventRecord } from "dedot/chaintypes";
 import { ExtrinsicManager } from "../extrinsicManager";
+import { encodeAddress } from "dedot/utils";
 
 type CreateCollectionData = {
   settings: bigint;
@@ -43,6 +44,53 @@ type SetMetadataData = {
 export class DedotExtrinsicsManager extends ExtrinsicManager<DedotClient> {
   constructor(signerAddress: string, client: DedotClient) {
     super(signerAddress, client);
+  }
+
+  async getCollections() {
+    // Returns undefined
+    const collection = await this.client.query.nfts.collectionAccount([
+      new AccountId32(this.signerAddress),
+      undefined,
+    ]);
+
+    console.log(collection);
+
+    // Returns undefined
+    const collection2 = await this.client.query.nfts.collectionAccount([
+      new AccountId32(this.signerAddress),
+      null,
+    ]);
+
+    console.log(collection2);
+
+    // Returns collection
+    const collection3 = await this.client.query.nfts.collectionAccount([
+      new AccountId32(this.signerAddress),
+      128,
+    ]);
+
+    console.log(collection3);
+
+    throw new Error("Not implemented");
+  }
+
+  async getTokens(collectionId: number) {
+    // Returns undefined
+    const tokens = await this.client.query.nfts.item([collectionId, undefined]);
+
+    console.log(tokens);
+
+    // Returns undefined
+    const tokens2 = await this.client.query.nfts.item([collectionId, null]);
+
+    console.log(tokens2);
+
+    // Returns token
+    const tokens3 = await this.client.query.nfts.item([collectionId, 10]);
+
+    console.log(tokens3);
+
+    throw new Error("Not implemented");
   }
 
   async createCollectionExtrinsic(
