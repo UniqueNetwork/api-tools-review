@@ -97,9 +97,7 @@ export default function DedotPage() {
       setSignerEnabled(true);
     });
 
-    extrinsicManager.getTokens(128);
-
-    extrinsicManager.getCollections();
+    extrinsicManager.getTokenMetadata(128, 10);
   }, [selectedAccount]);
 
   // Get chain properties when connected

@@ -47,50 +47,34 @@ export class DedotExtrinsicsManager extends ExtrinsicManager<DedotClient> {
   }
 
   async getCollections() {
-    // Returns undefined
-    const collection = await this.client.query.nfts.collectionAccount([
-      new AccountId32(this.signerAddress),
-      undefined,
-    ]);
+    const acc = new AccountId32(this.signerAddress);
 
-    console.log(collection);
+    const allCollections =
+      await this.client.query.nfts.collectionAccount.entries();
 
-    // Returns undefined
-    const collection2 = await this.client.query.nfts.collectionAccount([
-      new AccountId32(this.signerAddress),
-      null,
-    ]);
+    const collections = allCollections
+      .filter(([[accId]]) => accId.eq(acc))
+      .map(([[_, colId]]) => colId);
 
-    console.log(collection2);
+    return collections;
+  }
 
-    // Returns collection
-    const collection3 = await this.client.query.nfts.collectionAccount([
-      new AccountId32(this.signerAddress),
-      128,
-    ]);
+  async getTokenMetadata(collectionId: number, itemId: number) {
+    return this.client.query.nfts.itemMetadataOf([collectionId, itemId]);
+  }
 
-    console.log(collection3);
-
-    throw new Error("Not implemented");
+  async getTokenAttributes(collectionId: number, itemId: number) {
+    const attributes = await this.client.query.nfts.attribute.entries();
   }
 
   async getTokens(collectionId: number) {
-    // Returns undefined
-    const tokens = await this.client.query.nfts.item([collectionId, undefined]);
+    const allTokens = await this.client.query.nfts.item.entries();
 
-    console.log(tokens);
+    const tokens = allTokens
+      .filter(([[colId]]) => colId === collectionId)
+      .map(([[_, tokenId]]) => tokenId);
 
-    // Returns undefined
-    const tokens2 = await this.client.query.nfts.item([collectionId, null]);
-
-    console.log(tokens2);
-
-    // Returns token
-    const tokens3 = await this.client.query.nfts.item([collectionId, 10]);
-
-    console.log(tokens3);
-
-    throw new Error("Not implemented");
+    return tokens;
   }
 
   async createCollectionExtrinsic(
