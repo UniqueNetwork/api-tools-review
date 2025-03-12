@@ -97,7 +97,7 @@ export default function DedotPage() {
       setSignerEnabled(true);
     });
 
-    extrinsicManager.getTokenMetadata(128, 10);
+    extrinsicManager.getCollections().then((res) => setCollections(res));
   }, [selectedAccount]);
 
   // Get chain properties when connected
@@ -119,6 +119,24 @@ export default function DedotPage() {
       }
     }
   };
+
+  useEffect(() => {
+    if (!chosenCollection) {
+      return;
+    }
+
+    extrinsicManager.getTokens(chosenCollection).then((res) => setItem(res));
+  }, [chosenCollection]);
+
+  useEffect(() => {
+    if (!chosenItem) {
+      return;
+    }
+
+    extrinsicManager
+      .getTokenData(chosenCollection, chosenItem)
+      .then((res) => setChosenItemData(res));
+  }, [chosenItem]);
 
   const handleMintFormChange = (e) => {
     const { name, value } = e.target;

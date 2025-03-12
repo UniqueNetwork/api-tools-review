@@ -1,5 +1,5 @@
 To generate .papi files:
-`npx papi`
+`npx papi add dot -n westend-asset-hub`
 
 To change app settings, change the .env variables, e.g:
 

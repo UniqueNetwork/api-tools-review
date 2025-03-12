@@ -6,6 +6,7 @@ import { ISubmittableResult } from "dedot/types";
 import { FrameSystemEventRecord } from "dedot/chaintypes";
 import { ExtrinsicManager } from "../extrinsicManager";
 import { encodeAddress } from "dedot/utils";
+import { leToString } from "../le";
 
 type CreateCollectionData = {
   settings: bigint;
@@ -59,12 +60,35 @@ export class DedotExtrinsicsManager extends ExtrinsicManager<DedotClient> {
     return collections;
   }
 
+  async getTokenData(collectionId: number, itemId: number) {
+    const [metadata, attributes] = await Promise.all([
+      this.getTokenMetadata(collectionId, itemId),
+      this.getTokenAttributes(collectionId, itemId),
+    ]);
+
+    return {
+      metadata,
+      attributes,
+    };
+  }
+
   async getTokenMetadata(collectionId: number, itemId: number) {
-    return this.client.query.nfts.itemMetadataOf([collectionId, itemId]);
+    return this.client.query.nfts
+      .itemMetadataOf([collectionId, itemId])
+      .then((res) => leToString(res.data));
   }
 
   async getTokenAttributes(collectionId: number, itemId: number) {
-    const attributes = await this.client.query.nfts.attribute.entries();
+    const allAttributes = await this.client.query.nfts.attribute.entries();
+
+    return allAttributes
+      .filter(
+        ([[collectionId_, itemId_]]) =>
+          collectionId_ === collectionId && itemId_ === itemId
+      )
+      .map(([[, , , key], [value]]) => {
+        return [leToString(key), leToString(value)];
+      });
   }
 
   async getTokens(collectionId: number) {
