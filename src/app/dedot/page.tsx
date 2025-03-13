@@ -409,7 +409,7 @@ export default function DedotPage() {
                   : "Extrinsic submitted"}
               </h2>
               <h2>{extrinsicStatus}</h2>
-              <h2>{extrinsicTx}</h2>
+              <h2 className="break-all">{extrinsicTx}</h2>
               <h2 className="text-red">{extrinsicError}</h2>
             </div>
 

@@ -4,6 +4,7 @@ import {
   TypedApi,
   SS58String,
   Enum,
+  TxEvent,
 } from "polkadot-api";
 import { dot } from "@polkadot-api/descriptors";
 import { PolkadotSigner } from "@polkadot-api/polkadot-signer";
@@ -101,7 +102,10 @@ export class PapiExtrinsicManager {
     );
   }
 
-  async createCollectionExtrinsic(data: CreateCollectionData) {
+  async createCollectionExtrinsic(
+    data: CreateCollectionData,
+    callback: (data: TxEvent) => void
+  ) {
     return this.client.tx.Nfts.create({
       admin: {
         type: "Id",
@@ -121,10 +125,15 @@ export class PapiExtrinsicManager {
         settings: data.settings,
         max_supply: undefined,
       },
-    }).signAndSubmit(this.signer);
+    })
+      .signSubmitAndWatch(this.signer)
+      .subscribe((next) => callback(next));
   }
 
-  async mintExtrinsic(data: MintExtrinsicData) {
+  async mintExtrinsic(
+    data: MintExtrinsicData,
+    callback: (data: TxEvent) => void
+  ) {
     return this.client.tx.Nfts.mint({
       collection: data.collectionId,
       item: data.itemId,
@@ -136,24 +145,33 @@ export class PapiExtrinsicManager {
         owned_item: 0,
         mint_price: BigInt(0),
       },
-    }).signAndSubmit(this.signer);
+    })
+      .signSubmitAndWatch(this.signer)
+      .subscribe((next) => callback(next));
   }
 
-  async setAttributes(data: SetAttributeData) {
+  async setAttributes(
+    data: SetAttributeData,
+    callback: (data: TxEvent) => void
+  ) {
     return this.client.tx.Nfts.set_attribute({
       collection: data.collectionId,
       maybe_item: data.itemId,
       key: Binary.fromText(data.key),
       value: Binary.fromText(data.value),
       namespace: Enum(data.namespace.type, data.namespace.value || undefined),
-    }).signAndSubmit(this.signer);
+    })
+      .signSubmitAndWatch(this.signer)
+      .subscribe((next) => callback(next));
   }
 
-  async setMetadata(data: SetMetadataData) {
+  async setMetadata(data: SetMetadataData, callback: (data: TxEvent) => void) {
     return this.client.tx.Nfts.set_metadata({
       collection: data.collectionId,
       item: data.itemId,
       data: Binary.fromText(data.data),
-    }).signAndSubmit(this.signer);
+    })
+      .signSubmitAndWatch(this.signer)
+      .subscribe((next) => callback(next));
   }
 }

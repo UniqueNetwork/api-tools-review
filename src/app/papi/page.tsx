@@ -4,7 +4,7 @@ import { useExtension } from "@/context/walletConnectContext";
 import { useState, useEffect } from "react";
 
 import { usePapi } from "@/hooks/usePapi";
-import { TxFinalizedPayload } from "polkadot-api";
+import { TxEvent } from "polkadot-api";
 
 type CreateCollectionData = {
   mintType: {
@@ -78,7 +78,6 @@ export default function PapiPage() {
   const [chosenItem, setChosenItem] = useState(null);
   const [chosenItemData, setChosenItemData] = useState(null);
 
-  // Connect to default endpoint on page load
   useEffect(() => {
     if (!connected && !connecting) {
       connect();
@@ -160,13 +159,14 @@ export default function PapiPage() {
     e.preventDefault();
 
     setExtrinsicSubmitting(true);
-    const extrinsic = extrinsicManager.mintExtrinsic({
-      collectionId: +mintData.collectionId,
-      itemId: +mintData.itemId,
-      owner: selectedAccount.address,
-    });
-
-    await handleExtrinsic(extrinsic);
+    await extrinsicManager.mintExtrinsic(
+      {
+        collectionId: +mintData.collectionId,
+        itemId: +mintData.itemId,
+        owner: selectedAccount.address,
+      },
+      updateStatus
+    );
 
     setMintData({
       collectionId: "",
@@ -174,33 +174,19 @@ export default function PapiPage() {
     });
   };
 
-  const handleExtrinsic = async (extrinsic: Promise<TxFinalizedPayload>) => {
-    setExtrinsicTx(null);
-    setExtrinsicStatus(null);
-    setExtrinsicError(null);
-    setExtrinsicSubmitting(true);
-
-    const res = await extrinsic;
-
-    updateStatus(res);
-    setExtrinsicSubmitting(false);
-    setChosenCollection(null);
-    setChosenItem(null);
-    setChosenItemData(null);
-  };
-
   const handleCreateCollection = async (e) => {
     e.preventDefault();
 
-    const extrinsic = extrinsicManager.createCollectionExtrinsic({
-      mintSettings: {
-        defaultItemSettings: BigInt(createCollectionData.defaultSettings),
-        mintType: createCollectionData.mintType,
+    await extrinsicManager.createCollectionExtrinsic(
+      {
+        mintSettings: {
+          defaultItemSettings: BigInt(createCollectionData.defaultSettings),
+          mintType: createCollectionData.mintType,
+        },
+        settings: BigInt(createCollectionData.settings),
       },
-      settings: BigInt(createCollectionData.settings),
-    });
-
-    await handleExtrinsic(extrinsic);
+      updateStatus
+    );
 
     setCreateCollectionData({
       mintType: {
@@ -215,13 +201,14 @@ export default function PapiPage() {
   const handleSetMetadata = async (e) => {
     e.preventDefault();
 
-    const extrinsic = extrinsicManager.setMetadata({
-      collectionId: +metadataData.collectionId,
-      itemId: +metadataData.itemId,
-      data: metadataData.data,
-    });
-
-    await handleExtrinsic(extrinsic);
+    await extrinsicManager.setMetadata(
+      {
+        collectionId: +metadataData.collectionId,
+        itemId: +metadataData.itemId,
+        data: metadataData.data,
+      },
+      updateStatus
+    );
 
     setMetadataData({
       collectionId: "",
@@ -233,15 +220,16 @@ export default function PapiPage() {
   const handleSetAttributes = async (e) => {
     e.preventDefault();
 
-    const extrinsic = extrinsicManager.setAttributes({
-      collectionId: +attributesData.collectionId,
-      itemId: +attributesData.itemId,
-      namespace: attributesData.namespace,
-      key: attributesData.key,
-      value: attributesData.value,
-    });
-
-    await handleExtrinsic(extrinsic);
+    await extrinsicManager.setAttributes(
+      {
+        collectionId: +attributesData.collectionId,
+        itemId: +attributesData.itemId,
+        namespace: attributesData.namespace,
+        key: attributesData.key,
+        value: attributesData.value,
+      },
+      updateStatus
+    );
 
     setAttributesData({
       collectionId: "",
@@ -255,10 +243,10 @@ export default function PapiPage() {
     });
   };
 
-  const updateStatus = (data: TxFinalizedPayload) => {
-    setExtrinsicStatus(data.ok ? "Success" : "Failed");
+  const updateStatus = (data: TxEvent) => {
+    setExtrinsicStatus(data.type);
     setExtrinsicTx(data.txHash);
-    setExtrinsicError(data.dispatchError?.type);
+    setExtrinsicSubmitting(data.type === "finalized" ? false : true);
   };
 
   return (
@@ -379,14 +367,14 @@ export default function PapiPage() {
               )}
             </div>
 
-            <div className="max-w-md mx-auto p-4 bg-white rounded shadow mt-8">
+            <div className="max-w-md mx-auto p-4 bg-white rounded shadow mt-8 w-fit">
               <h2>
                 {extrinsicSubmitting
                   ? "Extrinsic submitting..."
                   : "Extrinsic submitted"}
               </h2>
-              <h2>{extrinsicStatus}</h2>
-              <h2>{extrinsicTx}</h2>
+              <p>{extrinsicStatus}</p>
+              <p className="break-all">{extrinsicTx}</p>
               <h2 className="text-red">{extrinsicError}</h2>
             </div>
 

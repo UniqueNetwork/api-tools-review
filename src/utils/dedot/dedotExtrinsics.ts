@@ -75,7 +75,7 @@ export class DedotExtrinsicsManager extends ExtrinsicManager<DedotClient> {
   async getTokenMetadata(collectionId: number, itemId: number) {
     return this.client.query.nfts
       .itemMetadataOf([collectionId, itemId])
-      .then((res) => leToString(res.data));
+      .then((res) => (res?.data ? leToString(res.data) : null));
   }
 
   async getTokenAttributes(collectionId: number, itemId: number) {
