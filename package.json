@@ -10,11 +10,14 @@
   },
   "dependencies": {
     "@dedot/api": "^0.7.1",
+    "@polkadot-api/descriptors": "file:.papi\\descriptors",
+    "@polkadot-api/polkadot-signer": "^0.1.6",
     "@polkadot/extension-dapp": "^0.58.4",
     "@polkadot/keyring": "^13.4.3",
     "@unique-nft/utils": "^0.3.20",
     "dedot": "^0.7.1",
     "next": "15.1.7",
+    "polkadot-api": "^1.9.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
