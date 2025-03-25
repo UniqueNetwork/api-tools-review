@@ -3,7 +3,7 @@
 import React, { createContext, useState, ReactNode } from "react";
 import { DedotClient, SmoldotProvider } from "dedot";
 import * as smoldot from "smoldot";
-import { DedotExtrinsicsManager } from "@/utils/dedot/dedotExtrinsics";
+import { DedotExtrinsicManager } from "@/utils/dedot/dedotExtrinsics";
 import * as chains from "polkadot-api/chains";
 
 interface DedotContextProps {
@@ -14,7 +14,7 @@ interface DedotContextProps {
   connect: () => Promise<void>;
   chainId: string;
   init: boolean;
-  extrinsicManager: DedotExtrinsicsManager;
+  extrinsicManager: DedotExtrinsicManager;
 }
 
 export const DedotLightContext = createContext<DedotContextProps>({
@@ -44,7 +44,7 @@ export const DedotLightProvider: React.FC<DedotProviderProps> = ({
   const [connecting, setConnecting] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [extrinsicManager, setExtrinsicManager] =
-    useState<DedotExtrinsicsManager | null>(null);
+    useState<DedotExtrinsicManager | null>(null);
 
   const connect = async () => {
     try {
@@ -70,7 +70,7 @@ export const DedotLightProvider: React.FC<DedotProviderProps> = ({
 
       await newClient.connect();
 
-      setExtrinsicManager(new DedotExtrinsicsManager("", newClient));
+      setExtrinsicManager(new DedotExtrinsicManager("", newClient));
 
       setClient(newClient);
       setConnected(true);

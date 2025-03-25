@@ -4,42 +4,9 @@ import { ISubmittableResult } from "dedot/types";
 import { FrameSystemEventRecord } from "dedot/chaintypes";
 import { ExtrinsicManager } from "../extrinsicManager";
 import { leToString } from "../le";
+import { CreateCollectionData, SetAttributeData, SetMetadataData, MintExtrinsicData } from "../types";
 
-type CreateCollectionData = {
-  settings: bigint;
-  mintSettings: {
-    mintType: {
-      type: "Issuer" | "Public" | "HolderOf";
-      value: number;
-    };
-    defaultItemSettings: bigint;
-  };
-};
-
-type SetAttributeData = {
-  collectionId: number;
-  itemId: number;
-  namespace: {
-    type: "Pallet" | "CollectionOwner" | "ItemOwner" | "Account";
-    value: string;
-  };
-  key: string;
-  value: string;
-};
-
-type MintExtrinsicData = {
-  collectionId: number;
-  itemId: number;
-  owner: string;
-};
-
-type SetMetadataData = {
-  collectionId: number;
-  itemId: number;
-  data: string;
-};
-
-export class DedotExtrinsicsManager extends ExtrinsicManager<DedotClient> {
+export class DedotExtrinsicManager extends ExtrinsicManager<DedotClient> {
   constructor(signerAddress: string, client: DedotClient) {
     super(signerAddress, client);
   }

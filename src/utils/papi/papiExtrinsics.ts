@@ -1,40 +1,7 @@
 import { Binary, TypedApi, Enum } from "polkadot-api";
 import { dot } from "@polkadot-api/descriptors";
 import { PolkadotSigner } from "@polkadot-api/polkadot-signer";
-
-type CreateCollectionData = {
-  settings: bigint;
-  mintSettings: {
-    mintType: {
-      type: "Issuer" | "Public" | "HolderOf";
-      value: number;
-    };
-    defaultItemSettings: bigint;
-  };
-};
-
-type SetAttributeData = {
-  collectionId: number;
-  itemId: number;
-  namespace: {
-    type: "Pallet" | "CollectionOwner" | "ItemOwner" | "Account";
-    value: string;
-  };
-  key: string;
-  value: string;
-};
-
-type MintExtrinsicData = {
-  collectionId: number;
-  itemId: number;
-  owner: string;
-};
-
-type SetMetadataData = {
-  collectionId: number;
-  itemId: number;
-  data: string;
-};
+import { CreateCollectionData, MintExtrinsicData, SetAttributeData, SetMetadataData } from "../types";
 
 export class PapiExtrinsicManager {
   protected readonly client: TypedApi<typeof dot>;
