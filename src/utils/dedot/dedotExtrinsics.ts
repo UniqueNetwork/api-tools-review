@@ -2,14 +2,60 @@ import { DedotClient } from "dedot";
 import { AccountId32 } from "dedot/codecs";
 import { ISubmittableResult } from "dedot/types";
 import { FrameSystemEventRecord } from "dedot/chaintypes";
-import { ExtrinsicManager } from "../extrinsicManager";
 import { leToString } from "../le";
 import { CreateCollectionData, SetAttributeData, SetMetadataData, MintExtrinsicData } from "../types";
+import { Signer } from "@polkadot/types/types";
+import { PolkadotSigner } from "polkadot-api";
+import { getPolkadotSigner } from "polkadot-api/signer";
+import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 
-export class DedotExtrinsicManager extends ExtrinsicManager<DedotClient> {
+export class DedotExtrinsicManager {
+  protected readonly client: DedotClient;
+  protected signerAddress: string;
+  protected signer: Signer;
+  protected polkadotSigner: PolkadotSigner;
+
+
   constructor(signerAddress: string, client: DedotClient) {
-    super(signerAddress, client);
+    this.client = client;
+    this.signerAddress = signerAddress;
   }
+
+  protected readonly getSigner = async (signerAddress: string) => {
+    await web3Enable("polkadot-js");
+
+    const injector = await web3FromAddress(signerAddress);
+
+    const signer = injector.signer;
+
+    if (!signer) {
+      return;
+    }
+
+    return signer;
+  };
+
+  async setSigner(signerAddress: string) {
+    this.signerAddress = signerAddress;
+
+    const signer = await this.getSigner(this.signerAddress);
+
+    this.polkadotSigner = getPolkadotSigner(
+      Buffer.from(this.signerAddress),
+      "Sr25519",
+      (input) =>
+        this.signer
+          .signRaw({
+            data: input.toString(),
+            type: "bytes",
+            address: this.signerAddress,
+          })
+          .then((res) => Buffer.from(JSON.stringify(res)))
+    );
+
+    this.signer = signer;
+  }
+
 
   async getCollections() {
     const acc = new AccountId32(this.signerAddress);
