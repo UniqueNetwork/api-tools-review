@@ -12,7 +12,7 @@ interface DedotContextProps {
   connecting: boolean;
   error: Error | null;
   connect: () => Promise<void>;
-  chainId: string;
+  chainSlug: string;
   init: boolean;
   extrinsicManager: DedotExtrinsicManager;
 }
@@ -23,7 +23,7 @@ export const DedotLightContext = createContext<DedotContextProps>({
   connecting: false,
   error: null,
   connect: async () => {},
-  chainId: "",
+  chainSlug: "",
   init: false,
   extrinsicManager: null,
 });
@@ -32,12 +32,12 @@ const DEFAULT_CHAIN = "polkadot_asset_hub";
 
 interface DedotProviderProps {
   children: ReactNode;
-  chainId?: string;
+  chainSlug?: string;
 }
 
 export const DedotLightProvider: React.FC<DedotProviderProps> = ({
   children,
-  chainId = DEFAULT_CHAIN,
+  chainSlug = DEFAULT_CHAIN,
 }) => {
   const [client, setClient] = useState<DedotClient | null>(null);
   const [connected, setConnected] = useState<boolean>(false);
@@ -53,11 +53,11 @@ export const DedotLightProvider: React.FC<DedotProviderProps> = ({
 
       const sm = smoldot.start();
 
-      const chainSpec = chains[chainId];
+      const chainSpec = chains[chainSlug];
 
-      const realyId = chainId.split("_")[0];
+      const relaySlug = chainSlug.split("_")[0];
 
-      const relayChain = await sm.addChain({ chainSpec: chains[realyId] });
+      const relayChain = await sm.addChain({ chainSpec: chains[relaySlug] });
 
       const chain = await sm.addChain({
         chainSpec,
@@ -87,7 +87,7 @@ export const DedotLightProvider: React.FC<DedotProviderProps> = ({
     connected,
     connecting,
     error,
-    chainId,
+    chainSlug,
     connect,
     init: true,
     extrinsicManager,

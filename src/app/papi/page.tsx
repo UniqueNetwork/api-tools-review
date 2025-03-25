@@ -33,7 +33,7 @@ export default function PapiPage() {
     connecting,
     error,
     connect,
-    chainId,
+    chainSlug,
     extrinsicManager,
   } = usePapi();
   const { selectedAccount, connectExtension, accounts, selectAccount } =
@@ -350,7 +350,7 @@ export default function PapiPage() {
 
           <div className="mt-4">
             <div className="flex mb-4">
-              <p>{chainId}</p>
+              <p>{chainSlug}</p>
             </div>
           </div>
         </div>

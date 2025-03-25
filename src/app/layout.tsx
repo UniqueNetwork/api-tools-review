@@ -28,7 +28,7 @@ export default function RootLayout({
     case "DEDOT":
       childrenWithProvider =
         providerType === "light" ? (
-          <DedotLightProvider chainId={process.env.CHAIN_ID}>
+          <DedotLightProvider chainSlug={process.env.CHAIN_SLUG}>
             {children}
           </DedotLightProvider>
         ) : (
@@ -41,7 +41,7 @@ export default function RootLayout({
     default:
       childrenWithProvider =
         providerType === "light" ? (
-          <PapiLightProvider chainId={process.env.CHAIN_ID}>
+          <PapiLightProvider chainSlug={process.env.CHAIN_SLUG}>
             {children}
           </PapiLightProvider>
         ) : (

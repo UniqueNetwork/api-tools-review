@@ -34,7 +34,7 @@ export default function DedotPage() {
     connecting,
     error,
     connect,
-    chainId,
+    chainSlug,
     extrinsicManager,
   } = useDedot();
   const { selectedAccount, connectExtension, accounts, selectAccount } =
@@ -373,7 +373,7 @@ export default function DedotPage() {
 
           <div className="mt-4">
             <div className="flex mb-4">
-              <p>{chainId}</p>
+              <p>{chainSlug}</p>
             </div>
           </div>
         </div>

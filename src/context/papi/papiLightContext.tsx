@@ -14,7 +14,7 @@ interface PapiContextProps {
   connecting: boolean;
   error: Error | null;
   connect: () => Promise<void>;
-  chainId: string;
+  chainSlug: string;
   init: boolean;
   extrinsicManager: PapiExtrinsicManager;
 }
@@ -25,7 +25,7 @@ export const PapiLightContext = createContext<PapiContextProps>({
   connecting: false,
   error: null,
   connect: async () => {},
-  chainId: "",
+  chainSlug: "",
   init: false,
   extrinsicManager: null,
 });
@@ -34,12 +34,12 @@ const DEFAULT_CHAIN = "polkadot_asset_hub";
 
 interface PapiProviderProps {
   children: ReactNode;
-  chainId?: string;
+  chainSlug?: string;
 }
 
 export const PapiLightProvider: React.FC<PapiProviderProps> = ({
   children,
-  chainId = DEFAULT_CHAIN,
+  chainSlug = DEFAULT_CHAIN,
 }) => {
   const [client, setClient] = useState<TypedApi<typeof dot> | null>(null);
   const [connected, setConnected] = useState<boolean>(false);
@@ -55,11 +55,11 @@ export const PapiLightProvider: React.FC<PapiProviderProps> = ({
 
       const sm = smoldot.start();
 
-      const chainSpec = chains[chainId];
+      const chainSpec = chains[chainSlug];
 
-      const realyId = chainId.split("_")[0];
+      const relaySlug = chainSlug.split("_")[0];
 
-      const relayChain = await sm.addChain({ chainSpec: chains[realyId] });
+      const relayChain = await sm.addChain({ chainSpec: chains[relaySlug] });
 
       const chain = await sm.addChain({
         chainSpec,
@@ -87,7 +87,7 @@ export const PapiLightProvider: React.FC<PapiProviderProps> = ({
     connected,
     connecting,
     error,
-    chainId,
+    chainSlug,
     connect,
     init: true,
     extrinsicManager,
