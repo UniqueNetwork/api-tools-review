@@ -14,7 +14,6 @@ interface PapiContextProps {
   connecting: boolean;
   error: Error | null;
   connect: () => Promise<void>;
-  chainSlug: string;
   init: boolean;
   extrinsicManager: PapiExtrinsicManager;
 }
@@ -25,7 +24,6 @@ export const PapiLightContext = createContext<PapiContextProps>({
   connecting: false,
   error: null,
   connect: async () => {},
-  chainSlug: "",
   init: false,
   extrinsicManager: null,
 });
@@ -87,7 +85,6 @@ export const PapiLightProvider: React.FC<PapiProviderProps> = ({
     connected,
     connecting,
     error,
-    chainSlug,
     connect,
     init: true,
     extrinsicManager,

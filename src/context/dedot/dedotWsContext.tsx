@@ -10,7 +10,6 @@ interface DedotWsContextProps {
   connecting: boolean;
   error: Error | null;
   connect: () => Promise<void>;
-  chainId: string;
   init: boolean;
   extrinsicManager: DedotExtrinsicManager;
 }
@@ -22,7 +21,6 @@ export const DedotWsContext = createContext<DedotWsContextProps>({
   connecting: false,
   error: null,
   connect: async () => {},
-  chainId: "",
   init: false,
   extrinsicManager: null,
 });
@@ -81,7 +79,6 @@ export const DedotWsProvider: React.FC<DedotWsProviderProps> = ({
     connected,
     connecting,
     error,
-    chainId: defaultEndpoint,
     connect,
     init: true,
     extrinsicManager,

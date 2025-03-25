@@ -33,7 +33,6 @@ export default function PapiPage() {
     connecting,
     error,
     connect,
-    chainSlug,
     extrinsicManager,
   } = usePapi();
   const { selectedAccount, connectExtension, accounts, selectAccount } =
@@ -347,12 +346,6 @@ export default function PapiPage() {
 
           {connecting && <p className="text-blue-600">Connecting...</p>}
           {error && <p className="text-red-500">Error: {error.message}</p>}
-
-          <div className="mt-4">
-            <div className="flex mb-4">
-              <p>{chainSlug}</p>
-            </div>
-          </div>
         </div>
 
         {connected && selectedAccount && (

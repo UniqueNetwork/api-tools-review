@@ -12,7 +12,6 @@ interface DedotContextProps {
   connecting: boolean;
   error: Error | null;
   connect: () => Promise<void>;
-  chainSlug: string;
   init: boolean;
   extrinsicManager: DedotExtrinsicManager;
 }
@@ -23,7 +22,6 @@ export const DedotLightContext = createContext<DedotContextProps>({
   connecting: false,
   error: null,
   connect: async () => {},
-  chainSlug: "",
   init: false,
   extrinsicManager: null,
 });
@@ -87,7 +85,6 @@ export const DedotLightProvider: React.FC<DedotProviderProps> = ({
     connected,
     connecting,
     error,
-    chainSlug,
     connect,
     init: true,
     extrinsicManager,
