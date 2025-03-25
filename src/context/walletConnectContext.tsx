@@ -1,6 +1,5 @@
 "use client";
 
-import { InjectedAccount } from "dedot/types";
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import {
   getInjectedExtensions,

@@ -1,11 +1,8 @@
-import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { DedotClient } from "dedot";
-import { Signer } from "@polkadot/types/types";
 import { AccountId32 } from "dedot/codecs";
 import { ISubmittableResult } from "dedot/types";
 import { FrameSystemEventRecord } from "dedot/chaintypes";
 import { ExtrinsicManager } from "../extrinsicManager";
-import { encodeAddress } from "dedot/utils";
 import { leToString } from "../le";
 
 type CreateCollectionData = {

@@ -1,10 +1,4 @@
-import {
-  Binary,
-  ChainDefinition,
-  TypedApi,
-  SS58String,
-  Enum,
-} from "polkadot-api";
+import { Binary, TypedApi, Enum } from "polkadot-api";
 import { dot } from "@polkadot-api/descriptors";
 import { PolkadotSigner } from "@polkadot-api/polkadot-signer";
 
