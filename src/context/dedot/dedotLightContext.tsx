@@ -5,16 +5,9 @@ import { DedotClient, SmoldotProvider } from "dedot";
 import * as smoldot from "smoldot";
 import { DedotExtrinsicManager } from "@/utils/dedot/dedotExtrinsics";
 import * as chains from "polkadot-api/chains";
+import { BaseContextProps } from "../types/BaseProps";
 
-interface DedotContextProps {
-  client: DedotClient | null;
-  connected: boolean;
-  connecting: boolean;
-  error: Error | null;
-  connect: () => Promise<void>;
-  init: boolean;
-  extrinsicManager: DedotExtrinsicManager;
-}
+type DedotContextProps = BaseContextProps<DedotClient, DedotExtrinsicManager>;
 
 export const DedotLightContext = createContext<DedotContextProps>({
   client: null,

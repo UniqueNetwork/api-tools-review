@@ -5,16 +5,9 @@ import { createClient, TypedApi } from "polkadot-api";
 import { getWsProvider } from "polkadot-api/ws-provider/web";
 import { dot } from "@polkadot-api/descriptors";
 import { PapiExtrinsicManager } from "@/utils/papi/papiExtrinsics";
+import { BaseContextProps } from "../types/BaseProps";
 
-interface PapiContextProps {
-  client: TypedApi<typeof dot> | null;
-  connected: boolean;
-  connecting: boolean;
-  error: Error | null;
-  connect: () => Promise<void>;
-  init: boolean;
-  extrinsicManager: PapiExtrinsicManager;
-}
+type PapiContextProps = BaseContextProps<TypedApi<typeof dot>, PapiExtrinsicManager>;
 
 export const PapiWsContext = createContext<PapiContextProps>({
   client: null,

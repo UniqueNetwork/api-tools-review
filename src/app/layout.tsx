@@ -19,8 +19,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const providerType = process.env.PROVIDER_TYPE;
-  const apiType = process.env.API_TYPE;
+  const providerType = process.env.NEXT_PUBLIC_PROVIDER_TYPE;
+  const apiType = process.env.NEXT_PUBLIC_API_TYPE;
 
   let childrenWithProvider;
 
@@ -28,11 +28,11 @@ export default function RootLayout({
     case "DEDOT":
       childrenWithProvider =
         providerType === "light" ? (
-          <DedotLightProvider chainSlug={process.env.CHAIN_SLUG}>
+          <DedotLightProvider chainSlug={process.env.NEXT_PUBLIC_CHAIN_SLUG}>
             {children}
           </DedotLightProvider>
         ) : (
-          <DedotWsProvider defaultEndpoint={process.env.WS_ENDPOINT}>
+          <DedotWsProvider defaultEndpoint={process.env.NEXT_PUBLIC_WS_ENDPOINT}>
             {children}
           </DedotWsProvider>
         );
@@ -41,11 +41,11 @@ export default function RootLayout({
     default:
       childrenWithProvider =
         providerType === "light" ? (
-          <PapiLightProvider chainSlug={process.env.CHAIN_SLUG}>
+          <PapiLightProvider chainSlug={process.env.NEXT_PUBLIC_CHAIN_SLUG}>
             {children}
           </PapiLightProvider>
         ) : (
-          <PapiWsProvider defaultEndpoint={process.env.WS_ENDPOINT}>
+          <PapiWsProvider defaultEndpoint={process.env.NEXT_PUBLIC_WS_ENDPOINT}>
             {children}
           </PapiWsProvider>
         );
