@@ -3,16 +3,9 @@
 import React, { createContext, useState, ReactNode } from "react";
 import { WsProvider, DedotClient } from "dedot";
 import { DedotExtrinsicManager } from "@/utils/dedot/dedotExtrinsics";
+import { BaseContextProps } from "../types/BaseProps";
 
-interface DedotWsContextProps {
-  client: DedotClient | null;
-  connected: boolean;
-  connecting: boolean;
-  error: Error | null;
-  connect: () => Promise<void>;
-  init: boolean;
-  extrinsicManager: DedotExtrinsicManager;
-}
+type DedotWsContextProps = BaseContextProps<DedotClient, DedotExtrinsicManager>;
 
 // Create the context with default values
 export const DedotWsContext = createContext<DedotWsContextProps>({

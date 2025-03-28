@@ -7,16 +7,9 @@ import { dot } from "@polkadot-api/descriptors";
 import { createClient, TypedApi } from "polkadot-api";
 import { PapiExtrinsicManager } from "@/utils/papi/papiExtrinsics";
 import { getSmProvider } from "polkadot-api/sm-provider";
+import { BaseContextProps } from "../types/BaseProps";
 
-interface PapiContextProps {
-  client: TypedApi<typeof dot> | null;
-  connected: boolean;
-  connecting: boolean;
-  error: Error | null;
-  connect: () => Promise<void>;
-  init: boolean;
-  extrinsicManager: PapiExtrinsicManager;
-}
+type PapiContextProps = BaseContextProps<TypedApi<typeof dot>, PapiExtrinsicManager>;
 
 export const PapiLightContext = createContext<PapiContextProps>({
   client: null,

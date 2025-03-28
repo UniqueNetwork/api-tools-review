@@ -1,6 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
+import { InjectedSigner } from "dedot/types";
+import { getWalletBySource, WalletAccount } from "@talismn/connect-wallets";
 import {
   getInjectedExtensions,
   connectInjectedExtension,
@@ -8,17 +10,23 @@ import {
   InjectedExtension,
 } from "polkadot-api/pjs-signer";
 
-// Define the context state shape
+
+interface ExtendedWalletAccount extends WalletAccount {
+  polkadotSigner: InjectedSigner;
+}
+
+//Use different accounts for PAPI(there own) and DEDOT(use extended types of connected wallet)
+type Account = InjectedPolkadotAccount | ExtendedWalletAccount;
+
 interface ExtensionContextProps {
-  accounts: InjectedPolkadotAccount[];
-  selectedAccount: InjectedPolkadotAccount | null;
+  accounts: Account[];
+  selectedAccount: Account | null;
   loading: boolean;
   error: Error | null;
   connectExtension: () => Promise<void>;
   selectAccount: (address: string) => void;
 }
 
-// Create the context with default values
 const ExtensionContext = createContext<ExtensionContextProps>({
   accounts: [],
   selectedAccount: null,
@@ -28,38 +36,49 @@ const ExtensionContext = createContext<ExtensionContextProps>({
   selectAccount: () => {},
 });
 
-// Custom hook for using the context
 export const useExtension = () => useContext(ExtensionContext);
 
-// Provider component
 interface ExtensionProviderProps {
   children: ReactNode;
 }
 
-export const ExtensionProvider: React.FC<ExtensionProviderProps> = ({
-  children,
-}) => {
-  const [accounts, setAccounts] = useState<InjectedPolkadotAccount[]>([]);
-  const [selectedAccount, setSelectedAccount] =
-    useState<InjectedPolkadotAccount | null>(null);
+export const ExtensionProvider: React.FC<ExtensionProviderProps> = ({ children }) => {
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Connect to the extension and request access
   const connectExtension = async () => {
     try {
       setLoading(true);
       setError(null);
+  
+      if (process.env.NEXT_PUBLIC_API_TYPE === "DEDOT") {
+        const wallet = getWalletBySource("polkadot-js");
+        if (wallet) {
+          await wallet.enable("Account React Example");
+          const polkadotAccounts = await wallet.getAccounts();
+          console.log(polkadotAccounts, 'WALLET')
 
-      const extensions: string[] = getInjectedExtensions();
+          const mappedAccounts: ExtendedWalletAccount[] = polkadotAccounts.map((account) => ({
+            ...account,
+            polkadotSigner: account.wallet.signer,
+          }));
+          setAccounts(mappedAccounts);
+        } else {
+          console.log("Wallet for polkadot-js not found");
+        }
+      } else {
 
-      const selectedExtension: InjectedExtension =
-        await connectInjectedExtension(extensions[0]);
+        const extensions: string[] = getInjectedExtensions();
 
-      const accounts: InjectedPolkadotAccount[] =
-        selectedExtension.getAccounts();
-
-      setAccounts(accounts);
+        const selectedExtension: InjectedExtension =
+          await connectInjectedExtension(extensions[0]);
+  
+        const accounts: InjectedPolkadotAccount[] =
+          selectedExtension.getAccounts();
+        setAccounts(accounts);
+      }
     } catch (err) {
       console.error("Failed to connect extension:", err);
       setError(
@@ -73,7 +92,6 @@ export const ExtensionProvider: React.FC<ExtensionProviderProps> = ({
   // Select an account by address
   const selectAccount = (address: string) => {
     const account = accounts.find((acc) => acc.address === address);
-
     if (account) {
       setSelectedAccount(account);
     }

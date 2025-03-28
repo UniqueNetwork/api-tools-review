@@ -4,7 +4,7 @@ import { useExtension } from "@/context/walletConnectContext";
 import { useState, useEffect } from "react";
 
 import { usePapi } from "@/hooks/usePapi";
-import { TxFinalizedPayload } from "polkadot-api";
+import { PolkadotSigner, TxFinalizedPayload } from "polkadot-api";
 
 type CreateCollectionData = {
   mintType: {
@@ -28,7 +28,6 @@ type SetAttributesData = {
 
 export default function PapiPage() {
   const {
-    client,
     connected,
     connecting,
     error,
@@ -69,8 +68,8 @@ export default function PapiPage() {
   const [extrinsicSubmitting, setExtrinsicSubmitting] = useState(false);
   const [extrinsicStatus, setExtrinsicStatus] = useState(null);
   const [extrinsicTx, setExtrinsicTx] = useState(null);
-  const [balance, setBalance] = useState(null);
-  const [chainProperties, setChainProperties] = useState(null);
+  const [balance] = useState(null);
+  const [chainProperties] = useState(null);
   const [collections, setCollections] = useState([]);
   const [items, setItem] = useState([]);
   const [chosenCollection, setChosenCollection] = useState(null);
@@ -90,7 +89,7 @@ export default function PapiPage() {
     }
 
     extrinsicManager.setSigner(
-      selectedAccount.polkadotSigner,
+      selectedAccount.polkadotSigner as PolkadotSigner,
       selectedAccount.address
     );
 
@@ -115,20 +114,6 @@ export default function PapiPage() {
       .then((res) => setChosenItemData(res));
   }, [chosenItem]);
 
-  useEffect(() => {
-    if (!connected) return;
-
-    getChainProperties();
-  }, [client, connected]);
-
-  const getChainProperties = async () => {
-    if (client && connected) {
-      try {
-      } catch (err) {
-        console.error("Failed to get chain properties:", err);
-      }
-    }
-  };
 
   const handleMintFormChange = (e) => {
     const { name, value } = e.target;
@@ -403,7 +388,7 @@ export default function PapiPage() {
                         ...prev,
                         mintType: {
                           value: 0,
-                          type: e.target.value as any,
+                          type: e.target.value as "Public" | "Issuer" | "HolderOf",
                         },
                       }));
                     }}
@@ -646,7 +631,7 @@ export default function PapiPage() {
                         ...prev,
                         namespace: {
                           ...prev.namespace,
-                          type: e.target.value as any,
+                          type: e.target.value as "Pallet" | "CollectionOwner" | "ItemOwner" | "Account",
                         },
                       }));
                     }}

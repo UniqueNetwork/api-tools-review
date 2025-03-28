@@ -2,10 +2,10 @@
 
 import { useExtension } from "@/context/walletConnectContext";
 import { ChainProperties } from "dedot/types/json-rpc";
-import { useState, useEffect } from "react";
-
+import { useState, useEffect, useCallback } from "react";
 import { DispatchError } from "dedot/codecs";
 import { useDedot } from "@/hooks/useDedot";
+import { InjectedSigner } from "dedot/types";
 
 type CreateCollectionData = {
   mintType: {
@@ -78,28 +78,41 @@ export default function DedotPage() {
   const [chosenItem, setChosenItem] = useState(null);
   const [chosenItemData, setChosenItemData] = useState(null);
 
-  // Connect to default endpoint on page load
+  const fetchBalance = useCallback(async () => {
+    if (!selectedAccount || !signerEnabled) return;
+    try {
+      const balance = await extrinsicManager.getBalance();
+      setBalance(+balance / 10 ** +chainProperties.tokenDecimals);
+      const collections = await extrinsicManager.getCollections();
+      setCollections(collections);
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+    }
+  }, [extrinsicManager, selectedAccount, signerEnabled]);
+
+  useEffect(() => {
+    const updateSigner = async () => {
+      setSignerEnabled(false);
+      if (!selectedAccount) return;
+
+      await extrinsicManager.setSigner(
+        selectedAccount.polkadotSigner as InjectedSigner,
+        selectedAccount.address
+      );
+  
+      setSignerEnabled(true);
+      fetchBalance();
+    };
+  
+    updateSigner();
+  }, [selectedAccount, extrinsicManager, fetchBalance]);
+  
   useEffect(() => {
     if (!connected && !connecting) {
       connect();
     }
   }, []);
-
-  useEffect(() => {
-    setSignerEnabled(false);
-
-    if (!selectedAccount) {
-      return;
-    }
-
-    extrinsicManager.setSigner(selectedAccount.address).then(() => {
-      setSignerEnabled(true);
-    });
-
-    extrinsicManager.getCollections().then((res) => setCollections(res));
-  }, [selectedAccount]);
-
-  // Get chain properties when connected
+  
   const [chainProperties, setChainProperties] = useState<ChainProperties>(null);
 
   useEffect(() => {
@@ -271,15 +284,6 @@ export default function DedotPage() {
     }
   };
 
-  const getBalance = () => {
-    if (client && selectedAccount) {
-      client.query.system.account(selectedAccount.address).then((balance) => {
-        setBalance(
-          +balance.data.free.toString() / 10 ** +chainProperties.tokenDecimals
-        );
-      });
-    }
-  };
 
   return (
     <main className="min-h-screen p-8 bg-gray-50">
@@ -426,7 +430,7 @@ export default function DedotPage() {
                         ...prev,
                         mintType: {
                           value: 0,
-                          type: e.target.value as any,
+                          type: e.target.value as "Public" | "Issuer" | "HolderOf",
                         },
                       }));
                     }}
@@ -669,7 +673,7 @@ export default function DedotPage() {
                         ...prev,
                         namespace: {
                           ...prev.namespace,
-                          type: e.target.value as any,
+                          type: e.target.value as "Pallet" | "CollectionOwner" | "ItemOwner" | "Account",
                         },
                       }));
                     }}
