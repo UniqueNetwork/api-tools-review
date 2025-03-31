@@ -8,7 +8,7 @@ import {
   SetAttributeData,
   SetMetadataData,
   MintExtrinsicData,
-} from "../types";
+} from "../common/types";
 import { Signer } from "@polkadot/types/types";
 
 export class DedotExtrinsicManager {

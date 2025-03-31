@@ -1,7 +1,12 @@
 import { Binary, TypedApi, Enum } from "polkadot-api";
 import { dot } from "@polkadot-api/descriptors";
 import { PolkadotSigner } from "@polkadot-api/polkadot-signer";
-import { CreateCollectionData, MintExtrinsicData, SetAttributeData, SetMetadataData } from "../types";
+import {
+  CreateCollectionData,
+  MintExtrinsicData,
+  SetAttributeData,
+  SetMetadataData,
+} from "../common/types";
 
 export class PapiExtrinsicManager {
   protected readonly client: TypedApi<typeof dot>;
