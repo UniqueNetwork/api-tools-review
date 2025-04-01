@@ -2,19 +2,21 @@
 
 import type React from "react"
 import { useState } from "react"
-import type { CommonComponentProps, MintExtrinsicData, TransactionStatus as TransactionStatusType } from "@/utils/common/types"
-import { mintItem } from "@/utils/common/adapters"
+import type {
+  CommonComponentProps,
+  MintExtrinsicData,
+  TransactionStatus as TransactionStatusType,
+} from "@/utils/common/types"
 import { TransactionStatus } from "./TransactionStatus"
-import { extractTransactionStatus } from "@/utils/common/adapters"
+import { extractTransactionStatus } from "@/utils/common/transactionUtils"
 
-const initData = { 
+const initData = {
   collectionId: null,
   itemId: null,
-  owner: ''
-};
+  owner: "",
+}
 
 export const MintItemForm = ({
-  apiType,
   extrinsicManager,
   isSignerEnabled,
   signerAddress,
@@ -54,9 +56,7 @@ export const MintItemForm = ({
     }))
 
     try {
-      await mintItem(
-        apiType,
-        extrinsicManager,
+      await extrinsicManager.mintItem(
         {
           collectionId: +mintData.collectionId,
           itemId: +mintData.itemId,
@@ -71,7 +71,7 @@ export const MintItemForm = ({
             hash,
             error,
           }))
-          onExtrinsicResult(result)
+          onExtrinsicResult?.(result)
         },
       )
 
@@ -134,3 +134,4 @@ export const MintItemForm = ({
     </div>
   )
 }
+

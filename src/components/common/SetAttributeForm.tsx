@@ -4,22 +4,20 @@ import type React from "react"
 import { useState } from "react"
 import type {
   CommonComponentProps,
-  SetAttributesData,
+  SetAttributeData,
   TransactionStatus as TransactionStatusType,
 } from "@/utils/common/types"
-import { setAttribute } from "@/utils/common/adapters"
 import { TransactionStatus } from "./TransactionStatus"
-import { extractTransactionStatus } from "@/utils/common/adapters"
+import { extractTransactionStatus } from "@/utils/common/transactionUtils"
 
 export const SetAttributeForm = ({
-  apiType,
   extrinsicManager,
   isSignerEnabled,
   onExtrinsicResult,
 }: CommonComponentProps) => {
-  const [attributesData, setAttributesData] = useState<SetAttributesData>({
-    collectionId: "",
-    itemId: "",
+  const [attributeData, setAttributeData] = useState<SetAttributeData>({
+    collectionId: 0,
+    itemId: 0,
     namespace: {
       type: "Pallet",
       value: "",
@@ -35,11 +33,55 @@ export const SetAttributeForm = ({
     error: null,
   })
 
-  const handleAttributesFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setAttributesData((prev) => ({
+  const handleCollectionIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number.parseInt(e.target.value) || 0
+    setAttributeData((prev) => ({
       ...prev,
-      [name]: value,
+      collectionId: value,
+    }))
+  }
+
+  const handleItemIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number.parseInt(e.target.value) || 0
+    setAttributeData((prev) => ({
+      ...prev,
+      itemId: value,
+    }))
+  }
+
+  const handleKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAttributeData((prev) => ({
+      ...prev,
+      key: e.target.value,
+    }))
+  }
+
+  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAttributeData((prev) => ({
+      ...prev,
+      value: e.target.value,
+    }))
+  }
+
+  const handleNamespaceTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value as "Pallet" | "CollectionOwner" | "ItemOwner" | "Account"
+    setAttributeData((prev) => ({
+      ...prev,
+      namespace: {
+        ...prev.namespace,
+        type: value,
+        value: value !== "Account" ? "" : prev.namespace.value,
+      },
+    }))
+  }
+
+  const handleNamespaceValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAttributeData((prev) => ({
+      ...prev,
+      namespace: {
+        ...prev.namespace,
+        value: e.target.value,
+      },
     }))
   }
 
@@ -59,33 +101,22 @@ export const SetAttributeForm = ({
         error: null,
       })
 
-      await setAttribute(
-        apiType,
-        extrinsicManager,
-        {
-          collectionId: +attributesData.collectionId,
-          itemId: +attributesData.itemId,
-          namespace: attributesData.namespace,
-          key: attributesData.key,
-          value: attributesData.value,
-        },
-        (result) => {
-          const { status, hash, error } = extractTransactionStatus(result)
+      await extrinsicManager.setAttribute(attributeData, (result) => {
+        const { status, hash, error } = extractTransactionStatus(result)
 
-          setTransactionStatus({
-            submitting: status !== "Finalized",
-            status,
-            hash,
-            error,
-          })
+        setTransactionStatus({
+          submitting: status !== "Finalized",
+          status,
+          hash,
+          error,
+        })
 
-          onExtrinsicResult(result)
-        },
-      )
+        onExtrinsicResult?.(result)
+      })
 
-      setAttributesData({
-        collectionId: "",
-        itemId: "",
+      setAttributeData({
+        collectionId: 0,
+        itemId: 0,
         namespace: {
           type: "Pallet",
           value: "",
@@ -115,9 +146,8 @@ export const SetAttributeForm = ({
           <input
             type="number"
             id="collectionId"
-            name="collectionId"
-            value={attributesData.collectionId}
-            onChange={handleAttributesFormChange}
+            value={attributeData.collectionId}
+            onChange={handleCollectionIdChange}
             required
             className="w-full px-3 py-2 border rounded"
           />
@@ -127,9 +157,8 @@ export const SetAttributeForm = ({
           <input
             type="number"
             id="itemId"
-            name="itemId"
-            value={attributesData.itemId}
-            onChange={handleAttributesFormChange}
+            value={attributeData.itemId}
+            onChange={handleItemIdChange}
             required
             className="w-full px-3 py-2 border rounded"
           />
@@ -139,9 +168,8 @@ export const SetAttributeForm = ({
           <input
             type="text"
             id="attributeKey"
-            name="key"
-            value={attributesData.key}
-            onChange={handleAttributesFormChange}
+            value={attributeData.key}
+            onChange={handleKeyChange}
             required
             className="w-full px-3 py-2 border rounded"
           />
@@ -151,9 +179,8 @@ export const SetAttributeForm = ({
           <input
             type="text"
             id="attributeValue"
-            name="value"
-            value={attributesData.value}
-            onChange={handleAttributesFormChange}
+            value={attributeData.value}
+            onChange={handleValueChange}
             required
             className="w-full px-3 py-2 border rounded"
           />
@@ -162,18 +189,9 @@ export const SetAttributeForm = ({
             Namespace Type
           </label>
           <select
-            id="attributeNamespace"
-            name="attributeNamespace"
-            value={attributesData.namespace.type}
-            onChange={(e) => {
-              setAttributesData((prev) => ({
-                ...prev,
-                namespace: {
-                  ...prev.namespace,
-                  type: e.target.value as "Pallet" | "CollectionOwner" | "ItemOwner" | "Account"
-                },
-              }))
-            }}
+            id="namespaceType"
+            value={attributeData.namespace.type}
+            onChange={handleNamespaceTypeChange}
             required
             className="w-full px-3 py-2 border rounded"
           >
@@ -182,28 +200,19 @@ export const SetAttributeForm = ({
             <option value="ItemOwner">ItemOwner</option>
             <option value="Account">Account</option>
           </select>
-          {attributesData.namespace.type === "Account" && (
+
+          {attributeData.namespace.type === "Account" && (
             <>
-              <label htmlFor="AccountId" className="block text-sm mb-1">
-                AccountId
+              <label htmlFor="namespaceValue" className="block text-sm mb-1">
+                Account Address
               </label>
               <input
-                id="accountId"
-                name="accountId"
+                id="namespaceValue"
                 type="text"
-                value={attributesData.namespace.value.toString()}
-                onChange={(e) => {
-                  e.preventDefault()
-
-                  setAttributesData((prev) => ({
-                    ...prev,
-                    namespace: {
-                      ...prev.namespace,
-                      value: e.target.value,
-                    },
-                  }))
-                }}
+                value={attributeData.namespace.value}
+                onChange={handleNamespaceValueChange}
                 className="w-full px-3 py-2 border rounded"
+                required={attributeData.namespace.type === "Account"}
               />
             </>
           )}

@@ -4,22 +4,20 @@ import type React from "react"
 import { useState } from "react"
 import type {
   CommonComponentProps,
-  MetadataData,
+  SetMetadataData,
   TransactionStatus as TransactionStatusType,
 } from "@/utils/common/types"
-import { setMetadata } from "@/utils/common/adapters"
 import { TransactionStatus } from "./TransactionStatus"
-import { extractTransactionStatus } from "@/utils/common/adapters"
+import { extractTransactionStatus } from "@/utils/common/transactionUtils"
 
 export const SetMetadataForm = ({
-  apiType,
   extrinsicManager,
   isSignerEnabled,
   onExtrinsicResult,
 }: CommonComponentProps) => {
-  const [metadataData, setMetadataData] = useState<MetadataData>({
-    collectionId: "",
-    itemId: "",
+  const [metadataData, setMetadataData] = useState<SetMetadataData>({
+    collectionId: 0,
+    itemId: 0,
     data: "",
   })
 
@@ -30,11 +28,26 @@ export const SetMetadataForm = ({
     error: null,
   })
 
-  const handleMetadataFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+  const handleCollectionIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number.parseInt(e.target.value) || 0
     setMetadataData((prev) => ({
       ...prev,
-      [name]: value,
+      collectionId: value,
+    }))
+  }
+
+  const handleItemIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number.parseInt(e.target.value) || 0
+    setMetadataData((prev) => ({
+      ...prev,
+      itemId: value,
+    }))
+  }
+
+  const handleDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMetadataData((prev) => ({
+      ...prev,
+      data: e.target.value,
     }))
   }
 
@@ -54,31 +67,22 @@ export const SetMetadataForm = ({
         error: null,
       })
 
-      await setMetadata(
-        apiType,
-        extrinsicManager,
-        {
-          collectionId: +metadataData.collectionId,
-          itemId: +metadataData.itemId,
-          data: metadataData.data,
-        },
-        (result) => {
-          const { status, hash, error } = extractTransactionStatus(result)
+      await extrinsicManager.setMetadata(metadataData, (result) => {
+        const { status, hash, error } = extractTransactionStatus(result)
 
-          setTransactionStatus({
-            submitting: status !== "Finalized",
-            status,
-            hash,
-            error,
-          })
+        setTransactionStatus({
+          submitting: status !== "Finalized",
+          status,
+          hash,
+          error,
+        })
 
-          onExtrinsicResult(result)
-        },
-      )
+        onExtrinsicResult?.(result)
+      })
 
       setMetadataData({
-        collectionId: "",
-        itemId: "",
+        collectionId: 0,
+        itemId: 0,
         data: "",
       })
     } catch (error) {
@@ -104,10 +108,10 @@ export const SetMetadataForm = ({
           <input
             type="number"
             id="collectionId"
-            name="collectionId"
             value={metadataData.collectionId}
-            onChange={handleMetadataFormChange}
+            onChange={handleCollectionIdChange}
             required
+            min="0"
             className="w-full px-3 py-2 border rounded"
           />
           <label htmlFor="itemId" className="block text-sm mb-1">
@@ -116,21 +120,20 @@ export const SetMetadataForm = ({
           <input
             type="number"
             id="itemId"
-            name="itemId"
             value={metadataData.itemId}
-            onChange={handleMetadataFormChange}
+            onChange={handleItemIdChange}
             required
+            min="0"
             className="w-full px-3 py-2 border rounded"
           />
-          <label htmlFor="metadata" className="block text-sm mb-1">
-            Data
+          <label htmlFor="data" className="block text-sm mb-1">
+            Metadata Data
           </label>
           <input
             type="text"
-            id="metadataData"
-            name="data"
+            id="data"
             value={metadataData.data}
-            onChange={handleMetadataFormChange}
+            onChange={handleDataChange}
             required
             className="w-full px-3 py-2 border rounded"
           />

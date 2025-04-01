@@ -11,7 +11,6 @@ export type ExtrinsicManager = DedotExtrinsicManager | PapiExtrinsicManager
 export type ExtrinsicResult = ISubmittableResult<FrameSystemEventRecord> | TxFinalizedPayload
 
 export interface CommonComponentProps {
-  apiType: ApiType
   extrinsicManager: ExtrinsicManager
   isSignerEnabled: boolean
   signerAddress?: string

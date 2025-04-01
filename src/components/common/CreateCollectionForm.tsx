@@ -7,9 +7,8 @@ import type {
   CreateCollectionData,
   TransactionStatus as TransactionStatusType,
 } from "@/utils/common/types"
-import { createCollection } from "@/utils/common/adapters"
 import { TransactionStatus } from "./TransactionStatus"
-import { extractTransactionStatus } from "@/utils/common/adapters"
+import { extractTransactionStatus } from "@/utils/common/transactionUtils"
 
 const initData: CreateCollectionData = {
   mintSettings: {
@@ -23,13 +22,11 @@ const initData: CreateCollectionData = {
 }
 
 export const CreateCollectionForm = ({
-  apiType,
   extrinsicManager,
   isSignerEnabled,
   onExtrinsicResult,
 }: CommonComponentProps) => {
-  const [createCollectionData, setCreateCollectionData] =
-    useState<CreateCollectionData>(initData)
+  const [createCollectionData, setCreateCollectionData] = useState<CreateCollectionData>(initData)
 
   const [transactionStatus, setTransactionStatus] = useState<TransactionStatusType>({
     submitting: false,
@@ -46,7 +43,7 @@ export const CreateCollectionForm = ({
       return
     }
 
-    setTransactionStatus(prev => ({
+    setTransactionStatus((prev) => ({
       ...prev,
       submitting: true,
       status: null,
@@ -55,27 +52,22 @@ export const CreateCollectionForm = ({
     }))
 
     try {
-      await createCollection(
-        apiType,
-        extrinsicManager,
-        createCollectionData,
-        (result) => {
-          const { status, hash, error } = extractTransactionStatus(result)
-          setTransactionStatus(prev => ({
-            ...prev,
-            submitting: status !== "Finalized",
-            status,
-            hash,
-            error,
-          }))
-          onExtrinsicResult(result)
-        },
-      )
+      await extrinsicManager.createCollection(createCollectionData, (result) => {
+        const { status, hash, error } = extractTransactionStatus(result)
+        setTransactionStatus((prev) => ({
+          ...prev,
+          submitting: status !== "Finalized",
+          status,
+          hash,
+          error,
+        }))
+        onExtrinsicResult?.(result)
+      })
 
       setCreateCollectionData(initData)
     } catch (error) {
       console.error("Failed to create collection:", error)
-      setTransactionStatus(prev => ({
+      setTransactionStatus((prev) => ({
         ...prev,
         submitting: false,
         status: "Failed",
@@ -98,7 +90,7 @@ export const CreateCollectionForm = ({
             name="mintType"
             value={createCollectionData.mintSettings.mintType.type}
             onChange={(e) =>
-              setCreateCollectionData(prev => ({
+              setCreateCollectionData((prev) => ({
                 ...prev,
                 mintSettings: {
                   ...prev.mintSettings,
@@ -127,7 +119,7 @@ export const CreateCollectionForm = ({
                 type="number"
                 value={createCollectionData.mintSettings.mintType.value.toString()}
                 onChange={(e) =>
-                  setCreateCollectionData(prev => ({
+                  setCreateCollectionData((prev) => ({
                     ...prev,
                     mintSettings: {
                       ...prev.mintSettings,
@@ -151,7 +143,7 @@ export const CreateCollectionForm = ({
             type="number"
             value={createCollectionData.mintSettings.defaultItemSettings.toString()}
             onChange={(e) =>
-              setCreateCollectionData(prev => ({
+              setCreateCollectionData((prev) => ({
                 ...prev,
                 mintSettings: {
                   ...prev.mintSettings,
@@ -171,7 +163,7 @@ export const CreateCollectionForm = ({
           type="number"
           value={createCollectionData.settings.toString()}
           onChange={(e) =>
-            setCreateCollectionData(prev => ({
+            setCreateCollectionData((prev) => ({
               ...prev,
               settings: BigInt(e.target.value),
             }))
@@ -194,3 +186,4 @@ export const CreateCollectionForm = ({
     </div>
   )
 }
+

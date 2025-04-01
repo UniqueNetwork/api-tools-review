@@ -1,15 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { ApiType, ExtrinsicManager, ItemData } from "@/utils/common/types"
+import type { ItemData } from "@/utils/common/types"
+import type { IExtrinsicManager } from "@/utils/common/extrinsicManager"
 
 interface CollectionsExplorerProps {
-  apiType: ApiType
-  extrinsicManager: ExtrinsicManager
+  extrinsicManager: IExtrinsicManager
   signerAddress?: string
 }
 
-export const CollectionsExplorer = ({ apiType, extrinsicManager, signerAddress }: CollectionsExplorerProps) => {
+export const CollectionsExplorer = ({ extrinsicManager, signerAddress }: CollectionsExplorerProps) => {
   const [collections, setCollections] = useState<number[]>([])
   const [items, setItems] = useState<number[]>([])
   const [chosenCollection, setChosenCollection] = useState<number | null>(null)
@@ -29,7 +29,7 @@ export const CollectionsExplorer = ({ apiType, extrinsicManager, signerAddress }
     }
 
     fetchCollections()
-  }, [extrinsicManager, apiType, signerAddress])
+  }, [extrinsicManager, signerAddress])
 
   useEffect(() => {
     if (!chosenCollection || !extrinsicManager) {
