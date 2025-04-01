@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useState, ReactNode } from "react";
-import * as smoldot from "smoldot";
+import { start } from "polkadot-api/smoldot"
 import * as chains from "polkadot-api/chains";
 import { dot } from "@polkadot-api/descriptors";
 import { createClient, TypedApi } from "polkadot-api";
@@ -44,7 +44,8 @@ export const PapiLightProvider: React.FC<PapiProviderProps> = ({
       setConnecting(true);
       setError(null);
 
-      const sm = smoldot.start();
+      
+      const sm = start();
 
       const chainSpec = chains[chainSlug];
 
