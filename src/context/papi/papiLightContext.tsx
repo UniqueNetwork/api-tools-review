@@ -1,18 +1,18 @@
 "use client";
 
 import React, { createContext, useState, ReactNode } from "react";
-import * as smoldot from "smoldot";
+import { start } from "polkadot-api/smoldot";
 import * as chains from "polkadot-api/chains";
-import { dot } from "@polkadot-api/descriptors";
+
 import { createClient, TypedApi } from "polkadot-api";
 import { PapiExtrinsicManager } from "@/utils/papi/papiExtrinsics";
 import { getSmProvider } from "polkadot-api/sm-provider";
-import { BaseContextProps } from "../types/BaseProps";
-
-type PapiContextProps = BaseContextProps<TypedApi<typeof dot>, PapiExtrinsicManager>;
+import { dot } from "@polkadot-api/descriptors";
+import { ChainSpecData, PapiContextProps } from "../types/BaseProps";
 
 export const PapiLightContext = createContext<PapiContextProps>({
   client: null,
+  chain: null,
   connected: false,
   connecting: false,
   error: null,
@@ -33,6 +33,7 @@ export const PapiLightProvider: React.FC<PapiProviderProps> = ({
   chainSlug = DEFAULT_CHAIN,
 }) => {
   const [client, setClient] = useState<TypedApi<typeof dot> | null>(null);
+  const [chain, setChain] = useState<ChainSpecData | null>(null);
   const [connected, setConnected] = useState<boolean>(false);
   const [connecting, setConnecting] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
@@ -44,25 +45,24 @@ export const PapiLightProvider: React.FC<PapiProviderProps> = ({
       setConnecting(true);
       setError(null);
 
-      const sm = smoldot.start();
+      const sm = start();
 
       const chainSpec = chains[chainSlug];
-
       const relaySlug = chainSlug.split("_")[0];
 
       const relayChain = await sm.addChain({ chainSpec: chains[relaySlug] });
-
-      const chain = await sm.addChain({
+      const newChain = await sm.addChain({
         chainSpec,
         potentialRelayChains: [relayChain],
       });
 
-      const provider = getSmProvider(chain);
+      setChain(chainSpec);
+
+      const provider = getSmProvider(newChain);
 
       const client = createClient(provider).getTypedApi(dot);
 
       setExtrinsicManager(new PapiExtrinsicManager(null, client));
-
       setClient(client);
       setConnected(true);
     } catch (err) {
@@ -75,6 +75,7 @@ export const PapiLightProvider: React.FC<PapiProviderProps> = ({
 
   const value: PapiContextProps = {
     client,
+    chain,
     connected,
     connecting,
     error,
