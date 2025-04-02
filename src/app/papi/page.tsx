@@ -30,21 +30,21 @@ export default function PapiPage() {
     if (!connected && !connecting) {
       connect()
     }
-  }, [])
+  }, [connect, connected, connecting])
 
   useEffect(() => {
+    const getBalance = async () => {
+      try {
+        const balance = await client.query.Balances.Account.getValue(selectedAccount.address)
+        setBalance(balance.free)
+      } catch (err) {
+        console.error("Failed to get balance:", err)
+      }
+    }
+
     if (!client || !connected || !selectedAccount) return
     getBalance()
   }, [client, connected, selectedAccount])
-
-  const getBalance = async () => {
-    try {
-      const balance = await client.query.Balances.Account.getValue(selectedAccount.address)
-      setBalance(balance.free)
-    } catch (err) {
-      console.error("Failed to get balance:", err)
-    }
-  }
 
   useEffect(() => {
     if (!chain) return

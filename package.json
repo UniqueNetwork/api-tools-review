@@ -19,7 +19,8 @@
     "next": "^15.2.3",
     "polkadot-api": "^1.9.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "smoldot": "^2.0.34"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

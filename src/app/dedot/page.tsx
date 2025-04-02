@@ -55,22 +55,22 @@ export default function DedotPage() {
     if (!connected && !connecting) {
       connect()
     }
-  }, [])
+  }, [connect, connected, connecting])
 
   useEffect(() => {
+    const getChainProperties = async () => {
+      try {
+        const properties = await client.rpc.system_properties()
+        setChainProperties(properties)
+      } catch (err) {
+        console.error("Failed to get chain properties:", err)
+      }
+    }
+
     if (!connected || !connected) return
 
     getChainProperties()
   }, [client, connected])
-
-  const getChainProperties = async () => {
-    try {
-      const properties = await client.rpc.system_properties()
-      setChainProperties(properties)
-    } catch (err) {
-      console.error("Failed to get chain properties:", err)
-    }
-  }
 
   const chainInfo = chainProperties
     ? {

@@ -6,6 +6,7 @@ import * as smoldot from "smoldot";
 import { DedotExtrinsicManager } from "@/utils/dedot/dedotExtrinsics";
 import * as chains from "polkadot-api/chains";
 import { BaseContextProps } from "../types/BaseProps";
+import { DEFAULT_CHAIN } from "@/context/constants";
 
 type DedotContextProps = BaseContextProps<DedotClient, DedotExtrinsicManager>;
 
@@ -18,8 +19,6 @@ export const DedotLightContext = createContext<DedotContextProps>({
   init: false,
   extrinsicManager: null,
 });
-
-const DEFAULT_CHAIN = "polkadot_asset_hub";
 
 interface DedotProviderProps {
   children: ReactNode;
