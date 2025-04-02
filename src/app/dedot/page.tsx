@@ -9,7 +9,7 @@ import { ConnectionStatus } from "@/components/common/ConnectionStatus"
 import { AccountSelector } from "@/components/common/AccountSelector"
 import { CollectionsExplorer } from "@/components/common/CollectionsExplorer"
 import { ErrorAlert } from "@/components/common/ErrorAlert"
-import { NFTForms } from "@/components/common/NFTForms"
+import { FormsSelector } from "@/components/common/FormsSelector"
 
 export default function DedotPage() {
   const { client, connected, connecting, error: connectionError, connect, extrinsicManager } = useDedot()
@@ -58,19 +58,17 @@ export default function DedotPage() {
   }, [])
 
   useEffect(() => {
-    if (!connected) return
+    if (!connected || !connected) return
 
     getChainProperties()
   }, [client, connected])
 
   const getChainProperties = async () => {
-    if (client && connected) {
-      try {
-        const properties = await client.rpc.system_properties()
-        setChainProperties(properties)
-      } catch (err) {
-        console.error("Failed to get chain properties:", err)
-      }
+    try {
+      const properties = await client.rpc.system_properties()
+      setChainProperties(properties)
+    } catch (err) {
+      console.error("Failed to get chain properties:", err)
     }
   }
 
@@ -108,13 +106,11 @@ export default function DedotPage() {
         {connected && signerEnabled && (
           <>
             <CollectionsExplorer
-              apiType="DEDOT"
               extrinsicManager={extrinsicManager}
               signerAddress={selectedAccount?.address}
             />
 
-            <NFTForms
-              apiType="DEDOT"
+            <FormsSelector
               extrinsicManager={extrinsicManager}
               isSignerEnabled={signerEnabled}
               signerAddress={selectedAccount?.address}

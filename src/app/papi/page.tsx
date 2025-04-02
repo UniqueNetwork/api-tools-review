@@ -8,13 +8,13 @@ import { ConnectionStatus } from "@/components/common/ConnectionStatus"
 import { AccountSelector } from "@/components/common/AccountSelector"
 import { CollectionsExplorer } from "@/components/common/CollectionsExplorer"
 import { ErrorAlert } from "@/components/common/ErrorAlert"
-import { NFTForms } from "@/components/common/NFTForms"
+import { FormsSelector } from "@/components/common/FormsSelector"
 
 export default function PapiPage() {
-  const { connected, connecting, error: connectionError, connect, extrinsicManager, client } = usePapi()
+  const { connected, connecting, error: connectionError, connect, extrinsicManager, client, chain } = usePapi()
   const { selectedAccount, connectExtension, accounts, selectAccount, error: walletError } = useExtension()
 
-  const [balance] = useState(null)
+  const [balance, setBalance] = useState(null)
   const [chainProperties, setChainProperties] = useState(null)
   const [signerEnabled, setSignerEnabled] = useState(false)
 
@@ -33,6 +33,26 @@ export default function PapiPage() {
   }, [])
 
   useEffect(() => {
+    if (!client || !connected || !selectedAccount) return
+    getBalance()
+  }, [client, connected, selectedAccount])
+
+  const getBalance = async () => {
+    try {
+      const balance = await client.query.Balances.Account.getValue(selectedAccount.address)
+      setBalance(balance.free)
+    } catch (err) {
+      console.error("Failed to get balance:", err)
+    }
+  }
+
+  useEffect(() => {
+    if (!chain) return
+    setChainProperties(chain.properties)
+  }, [chain])
+
+
+  useEffect(() => {
     if (!selectedAccount) {
       setSignerEnabled(false)
       return
@@ -40,15 +60,6 @@ export default function PapiPage() {
 
     extrinsicManager.setSigner(selectedAccount.polkadotSigner as PolkadotSigner, selectedAccount.address)
     setSignerEnabled(true)
-    if (client) {
-      //TODO - update with actual chain info
-      setChainProperties({
-        tokenSymbol: "WND",
-        tokenDecimals: 12,
-        ss58Format: 42,
-      })
-    }
-
   }, [selectedAccount, extrinsicManager, client])
 
   const chainInfo = chainProperties
@@ -85,13 +96,11 @@ export default function PapiPage() {
         {connected && signerEnabled && (
           <>
             <CollectionsExplorer
-              apiType="PAPI"
               extrinsicManager={extrinsicManager}
               signerAddress={selectedAccount?.address}
             />
 
-            <NFTForms
-              apiType="PAPI"
+            <FormsSelector
               extrinsicManager={extrinsicManager}
               isSignerEnabled={signerEnabled}
               signerAddress={selectedAccount?.address}

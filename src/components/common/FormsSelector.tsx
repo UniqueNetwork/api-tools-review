@@ -14,7 +14,7 @@ const tabs = [
   { key: "attribute", label: "Set Attribute", component: SetAttributeForm },
 ]
 
-export const NFTForms = (props: CommonComponentProps) => {
+export const FormsSelector = (props: CommonComponentProps) => {
   const [activeTab, setActiveTab] = useState("create")
   const ActiveComponent = tabs.find((tab) => tab.key === activeTab)?.component
 
