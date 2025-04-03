@@ -5,25 +5,15 @@ import { createClient, TypedApi } from "polkadot-api";
 import { getWsProvider } from "polkadot-api/ws-provider/web";
 import { dot } from "@polkadot-api/descriptors";
 import { PapiExtrinsicManager } from "@/utils/papi/papiExtrinsics";
-
-interface PapiContextProps {
-  client: TypedApi<typeof dot> | null;
-  connected: boolean;
-  connecting: boolean;
-  error: Error | null;
-  connect: () => Promise<void>;
-  chainId: string;
-  init: boolean;
-  extrinsicManager: PapiExtrinsicManager;
-}
+import { ChainSpecData, PapiContextProps } from "../types/BaseProps";
 
 export const PapiWsContext = createContext<PapiContextProps>({
   client: null,
+  chain: null,
   connected: false,
   connecting: false,
   error: null,
   connect: async () => {},
-  chainId: "",
   init: false,
   extrinsicManager: null,
 });
@@ -40,6 +30,7 @@ export const PapiWsProvider: React.FC<PapiProviderProps> = ({
   defaultEndpoint = DEFAULT_ENDPOINT,
 }) => {
   const [client, setClient] = useState<TypedApi<typeof dot> | null>(null);
+    const [chain, setChain] = useState<ChainSpecData | null>(null);
   const [connected, setConnected] = useState<boolean>(false);
   const [connecting, setConnecting] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
@@ -53,13 +44,20 @@ export const PapiWsProvider: React.FC<PapiProviderProps> = ({
 
       const provider = getWsProvider(defaultEndpoint);
 
-      const client = createClient(provider).getTypedApi(dot);
+      const client = createClient(provider)
 
-      const extrinsicManager = new PapiExtrinsicManager(null, client);
+      const typedClient = client.getTypedApi(dot);
+
+      const extrinsicManager = new PapiExtrinsicManager(null, typedClient);
 
       setExtrinsicManager(extrinsicManager);
 
-      setClient(client);
+      const chainInfo = await client.getChainSpecData();
+
+      console.log(chainInfo, 'CHAIN_INFO');
+
+      setChain(chainInfo)
+      setClient(typedClient);
       setConnected(true);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Failed to connect"));
@@ -71,10 +69,10 @@ export const PapiWsProvider: React.FC<PapiProviderProps> = ({
 
   const value: PapiContextProps = {
     client,
+    chain,
     connected,
     connecting,
     error,
-    chainId: defaultEndpoint,
     connect,
     init: true,
     extrinsicManager,

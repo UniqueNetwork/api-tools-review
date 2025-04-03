@@ -2,18 +2,10 @@
 
 import React, { createContext, useState, ReactNode } from "react";
 import { WsProvider, DedotClient } from "dedot";
-import { DedotExtrinsicsManager } from "@/utils/dedot/dedotExtrinsics";
+import { DedotExtrinsicManager } from "@/utils/dedot/dedotExtrinsics";
+import { BaseContextProps } from "../types/BaseProps";
 
-interface DedotWsContextProps {
-  client: DedotClient | null;
-  connected: boolean;
-  connecting: boolean;
-  error: Error | null;
-  connect: () => Promise<void>;
-  chainId: string;
-  init: boolean;
-  extrinsicManager: DedotExtrinsicsManager;
-}
+type DedotWsContextProps = BaseContextProps<DedotClient, DedotExtrinsicManager>;
 
 // Create the context with default values
 export const DedotWsContext = createContext<DedotWsContextProps>({
@@ -22,7 +14,6 @@ export const DedotWsContext = createContext<DedotWsContextProps>({
   connecting: false,
   error: null,
   connect: async () => {},
-  chainId: "",
   init: false,
   extrinsicManager: null,
 });
@@ -45,7 +36,7 @@ export const DedotWsProvider: React.FC<DedotWsProviderProps> = ({
   const [connecting, setConnecting] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [extrinsicManager, setExtrinsicManager] =
-    useState<DedotExtrinsicsManager | null>(null);
+    useState<DedotExtrinsicManager | null>(null);
 
   // Connect to a Polkadot node
   const connect = async () => {
@@ -64,7 +55,7 @@ export const DedotWsProvider: React.FC<DedotWsProviderProps> = ({
       // Wait for client to connect
       await newClient.connect();
 
-      setExtrinsicManager(new DedotExtrinsicsManager("", newClient));
+      setExtrinsicManager(new DedotExtrinsicManager("", newClient));
 
       setClient(newClient);
       setConnected(true);
@@ -81,7 +72,6 @@ export const DedotWsProvider: React.FC<DedotWsProviderProps> = ({
     connected,
     connecting,
     error,
-    chainId: defaultEndpoint,
     connect,
     init: true,
     extrinsicManager,
